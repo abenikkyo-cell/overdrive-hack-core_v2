@@ -166,6 +166,16 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .shaking{animation:shake .3s ease;}
 #board-container::after{content:'';position:absolute;left:0;right:0;height:2px;background:rgba(0,245,255,.15);animation:scanline 4s linear infinite;pointer-events:none;}
 @keyframes scanline{from{top:0;}to{top:100%;}}
+  /* BGM */
+#bgm-btn {
+  position: fixed; bottom: 12px; right: 12px;
+  z-index: 400; font-size: 20px;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(0,245,255,0.3);
+  border-radius: 50%; width: 36px; height: 36px;
+  cursor: pointer; color: var(--neon-cyan);
+  display: flex; align-items: center; justify-content: center;
+}
 </style>
 </head>
 <body>
@@ -634,6 +644,48 @@ function endGame(){
 
 function restartGame(){document.getElementById('gameover-screen').classList.remove('show');document.getElementById('go-title-text').textContent='SYSTEM CRASH';startGame(gameMode,gameVariant);}
 function goToTitle(){document.getElementById('gameover-screen').classList.remove('show');document.getElementById('go-title-text').textContent='SYSTEM CRASH';document.getElementById('game-wrapper').style.display='none';document.getElementById('title-screen').style.display='flex';renderTitleHS();}
+</script>
+  <!-- BGM -->
+<audio id="bgm" src="bgm_game.mp3" loop preload="auto"></audio>
+<button id="bgm-btn" onclick="toggleBGM()" title="BGM ON/OFF">🔊</button>
+
+<script>
+const bgm = document.getElementById('bgm');
+const bgmBtn = document.getElementById('bgm-btn');
+let bgmEnabled = true;
+
+function startBGM() {
+  if (bgmEnabled) {
+    bgm.volume = 0.5;
+    bgm.play().catch(() => {});
+  }
+}
+
+function toggleBGM() {
+  bgmEnabled = !bgmEnabled;
+  if (bgmEnabled) {
+    bgm.play().catch(() => {});
+    bgmBtn.textContent = '🔊';
+  } else {
+    bgm.pause();
+    bgmBtn.textContent = '🔇';
+  }
+}
+
+// 既存の startGame 関数を上書きして BGM 開始を追加
+const _origStartGame = startGame;
+window.startGame = function(mode, variant) {
+  _origStartGame(mode, variant);
+  startBGM();
+};
+
+// ゲームオーバー時に BGM を止める
+const _origEndGame = endGame;
+window.endGame = function() {
+  _origEndGame();
+  bgm.pause();
+  bgm.currentTime = 0;
+};
 </script>
 </body>
 </html>
