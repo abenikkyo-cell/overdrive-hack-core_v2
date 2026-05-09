@@ -100,6 +100,21 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .panel.p-bomb{background:rgba(255,100,0,.3);border-color:var(--overdrive);animation:bombblink .8s infinite;}
 @keyframes bombblink{50%{box-shadow:0 0 14px var(--overdrive);border-color:#fff;}}
 .panel.p-corrupt{background:rgba(20,20,20,.88);border-color:#444;cursor:not-allowed;}
+
+/* Gimmick spawn flash */
+.panel.gimmick-spawn{animation:gimmickspawn .6s ease-out;}
+@keyframes gimmickspawn{
+  0%  {transform:scale(0.5);filter:brightness(5);opacity:.5;}
+  40% {transform:scale(1.25);filter:brightness(2.5);}
+  70% {transform:scale(0.95);filter:brightness(1.5);}
+  100%{transform:scale(1);filter:brightness(1);opacity:1;}
+}
+/* virus spawn: red flash */
+.panel.p-virus.gimmick-spawn{filter:brightness(4);box-shadow:0 0 20px #ff0000,0 0 40px #ff0000;}
+/* bomb spawn: orange flash */
+.panel.p-bomb.gimmick-spawn{filter:brightness(4);box-shadow:0 0 20px var(--overdrive),0 0 40px var(--overdrive);}
+/* corrupt spawn: white flash */
+.panel.p-corrupt.gimmick-spawn{filter:brightness(6);box-shadow:0 0 20px #aaaaaa,0 0 40px #ffffff;}
 .corrupt-hp{font-size:9px;color:#ff4444;font-weight:bold;letter-spacing:-1px;}
 .panel.clearing{animation:clearflash .35s forwards;}
 @keyframes clearflash{0%{transform:scale(1);opacity:1;}50%{transform:scale(1.45);opacity:.8;filter:brightness(3);}100%{transform:scale(0);opacity:0;}}
@@ -158,7 +173,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 #gameover-screen{position:fixed;inset:0;z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(2,10,18,.92);}
 #gameover-screen.show{display:flex;animation:gofadein .5s ease;}
 @keyframes gofadein{from{opacity:0;}to{opacity:1;}}
-.go-title{font-family:'Orbitron',sans-serif;font-size:44px;font-weight:900;color:var(--panel-red);text-shadow:0 0 20px var(--panel-red),0 0 60px var(--panel-red);letter-spacing:4px;margin-bottom:24px;}
+.go-title{font-family:'Orbitron',sans-serif;font-size:44px;font-weight:900;color:var(--panel-red);text-shadow:0 0 20px var(--panel-red),0 0 60px var(--panel-red);letter-spacing:4px;margin-bottom:24px;text-align:center;width:100%;}
 .go-score-label{font-size:11px;color:var(--dim);letter-spacing:3px;margin-bottom:8px;}
 .go-score{font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;color:var(--neon-yellow);text-shadow:0 0 20px var(--neon-yellow);margin-bottom:8px;}
 .go-score.new-record{color:var(--neon-pink);text-shadow:0 0 30px var(--neon-pink),0 0 60px var(--neon-pink);}
@@ -176,6 +191,149 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .shaking{animation:shake .3s ease;}
 #board-container::after{content:'';position:absolute;left:0;right:0;height:2px;background:rgba(0,245,255,.15);animation:scanline 4s linear infinite;pointer-events:none;}
 @keyframes scanline{from{top:0;}to{top:100%;}}
+
+/* ===== INTRO SEQUENCE ===== */
+#intro-overlay{
+  position:fixed;inset:0;z-index:500;
+  background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  pointer-events:all;
+}
+#intro-overlay.hidden{display:none;}
+
+/* INITIALIZE text — 0.7s */
+#intro-init{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(18px,4vw,32px);font-weight:900;
+  color:var(--neon-cyan);letter-spacing:6px;
+  text-shadow:0 0 20px var(--neon-cyan),0 0 50px var(--neon-cyan);
+  opacity:0;
+}
+#intro-init.show{animation:initshow 0.7s forwards;}
+@keyframes initshow{
+  0%  {opacity:0;letter-spacing:2px;}
+  35% {opacity:1;letter-spacing:8px;}
+  75% {opacity:1;letter-spacing:6px;}
+  100%{opacity:0;}
+}
+
+/* noise / glitch layer — 0.7s */
+#intro-noise{
+  position:absolute;inset:0;
+  opacity:0;pointer-events:none;
+  background-image:
+    repeating-linear-gradient(0deg,rgba(0,245,255,0.05) 0px,transparent 1px,transparent 3px),
+    repeating-linear-gradient(90deg,rgba(255,0,128,0.04) 0px,transparent 1px,transparent 4px);
+  background-size:100% 4px,4px 100%;
+}
+#intro-noise.show{animation:noiseshow 0.7s forwards;}
+@keyframes noiseshow{
+  0%  {opacity:0;}
+  15% {opacity:1;transform:translateY(-4px) skewX(-2deg);}
+  30% {opacity:.8;transform:translateY(3px) skewX(1deg);}
+  55% {opacity:1;transform:translateY(-2px);}
+  75% {opacity:.6;transform:skewX(-1deg);}
+  100%{opacity:0;transform:none;}
+}
+
+/* glitch lines */
+#intro-glitch-lines{
+  position:absolute;inset:0;pointer-events:none;overflow:hidden;opacity:0;
+}
+#intro-glitch-lines.show{animation:glitchlines 0.7s forwards;}
+@keyframes glitchlines{
+  0%,100%{opacity:0;}
+  20%{opacity:1;} 21%{opacity:0;}
+  45%{opacity:1;} 46%{opacity:0;}
+  70%{opacity:1;} 71%{opacity:0;}
+}
+.glitch-line{
+  position:absolute;left:0;right:0;height:2px;
+  background:rgba(0,245,255,0.6);
+}
+
+/* board ghost — shown during scan */
+#intro-board-ghost{
+  position:absolute;
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:5px;
+  width:min(86vw,430px);
+  opacity:0;
+  pointer-events:none;
+}
+#intro-board-ghost.show{animation:boardghostshow 0.9s forwards;}
+@keyframes boardghostshow{
+  0%  {opacity:0;}
+  15% {opacity:1;}
+  80% {opacity:0.6;}
+  100%{opacity:0;}
+}
+.ghost-cell{
+  aspect-ratio:1;
+  border-radius:5px;
+  border:1px solid rgba(0,245,255,0.2);
+  background:rgba(0,245,255,0.03);
+  box-shadow:inset 0 0 4px rgba(0,245,255,0.08);
+}
+
+/* scan line sweep — 0.9s */
+#intro-scan{
+  position:absolute;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,transparent,rgba(0,245,255,0.4),var(--neon-cyan),rgba(0,245,255,0.4),transparent);
+  box-shadow:0 0 16px var(--neon-cyan),0 0 40px rgba(0,245,255,0.6),0 -8px 30px rgba(0,245,255,0.15),0 8px 30px rgba(0,245,255,0.15);
+  opacity:0;top:0;
+  pointer-events:none;
+}
+#intro-scan.show{animation:scanswipe 0.9s cubic-bezier(.4,0,.2,1) forwards;}
+@keyframes scanswipe{
+  0%  {opacity:0;top:-1%;}
+  8%  {opacity:1;top:0%;}
+  92% {opacity:1;top:100%;}
+  100%{opacity:0;top:101%;}
+}
+
+/* scan trailing glow */
+#intro-scan-trail{
+  position:absolute;left:0;right:0;
+  background:linear-gradient(180deg,rgba(0,245,255,0.06) 0%,transparent 100%);
+  opacity:0;top:0;height:0%;
+  pointer-events:none;
+}
+#intro-scan-trail.show{animation:scantrail 0.9s cubic-bezier(.4,0,.2,1) forwards;}
+@keyframes scantrail{
+  0%  {opacity:0;height:0%;top:0%;}
+  8%  {opacity:1;height:0%;top:0%;}
+  92% {opacity:0.5;height:100%;top:0%;}
+  100%{opacity:0;height:100%;top:0%;}
+}
+
+/* JACK IN text — 0.7s */
+#intro-jackin{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(28px,6vw,56px);font-weight:900;
+  color:#fff;letter-spacing:8px;
+  text-shadow:0 0 20px var(--neon-cyan),0 0 60px var(--neon-cyan),0 0 100px rgba(0,245,255,0.4);
+  opacity:0;position:absolute;
+}
+#intro-jackin.show{animation:jackinshow 0.7s forwards;}
+@keyframes jackinshow{
+  0%  {opacity:0;transform:scale(0.7) skewX(-6deg);letter-spacing:3px;}
+  30% {opacity:1;transform:scale(1.08) skewX(-1deg);letter-spacing:10px;}
+  60% {opacity:1;transform:scale(1);letter-spacing:8px;}
+  100%{opacity:0;transform:scale(1.03);letter-spacing:11px;}
+}
+
+/* screen flash */
+#intro-flash{
+  position:fixed;inset:0;pointer-events:none;z-index:499;
+  background:var(--neon-cyan);opacity:0;
+}
+#intro-flash.show{animation:flashburst 0.3s forwards;}
+@keyframes flashburst{
+  0%  {opacity:0.5;}
+  100%{opacity:0;}
+}
 </style>
 </head>
 <body>
@@ -288,10 +446,73 @@ function startGame(mode,variant){
   }
 
   initBoard();renderBoard();updateHUD();updateNoMatchBar();
-  gameRunning=true;
-  if(gameTimer)clearInterval(gameTimer);
-  gameTimer=setInterval(gameTick,1000);
-  startNoMatchTimer();
+  // play intro sequence, then actually start
+  playIntro(()=>{
+    gameRunning=true;
+    if(gameTimer)clearInterval(gameTimer);
+    gameTimer=setInterval(gameTick,1000);
+    startNoMatchTimer();
+  });
+}
+
+function playIntro(onComplete){
+  // Total: ~3000ms
+  // 0    - 700  : INITIALIZE... + noise/glitch
+  // 700  - 1600 : scan sweep (board ghost visible behind scan)
+  // 1600 - 2300 : JACK IN
+  // 2300 - 2600 : flash → game start
+
+  const overlay   = document.getElementById('intro-overlay');
+  const elInit    = document.getElementById('intro-init');
+  const elNoise   = document.getElementById('intro-noise');
+  const elGlitch  = document.getElementById('intro-glitch-lines');
+  const elGhost   = document.getElementById('intro-board-ghost');
+  const elScan    = document.getElementById('intro-scan');
+  const elTrail   = document.getElementById('intro-scan-trail');
+  const elJackin  = document.getElementById('intro-jackin');
+  const elFlash   = document.getElementById('intro-flash');
+
+  // build board ghost (6×6 empty cells)
+  elGhost.innerHTML='';
+  for(let i=0;i<36;i++){const c=document.createElement('div');c.className='ghost-cell';elGhost.appendChild(c);}
+
+  // reset
+  [elInit,elNoise,elGlitch,elGhost,elScan,elTrail,elJackin].forEach(el=>{
+    el.classList.remove('show');void el.offsetWidth;
+  });
+  overlay.classList.remove('hidden');
+
+  // Phase 1 (0ms): INITIALIZE... + noise + glitch simultaneously
+  setTimeout(()=>{
+    elInit.classList.add('show');
+    void elNoise.offsetWidth; void elGlitch.offsetWidth;
+    elNoise.classList.add('show');
+    elGlitch.classList.add('show');
+  }, 30);
+
+  // Phase 2 (700ms): scan + board ghost
+  setTimeout(()=>{
+    elInit.classList.remove('show');
+    void elGhost.offsetWidth; void elScan.offsetWidth; void elTrail.offsetWidth;
+    elGhost.classList.add('show');
+    elScan.classList.add('show');
+    elTrail.classList.add('show');
+  }, 700);
+
+  // Phase 3 (1650ms): JACK IN
+  setTimeout(()=>{
+    elGhost.classList.remove('show');
+    void elJackin.offsetWidth;
+    elJackin.classList.add('show');
+  }, 1650);
+
+  // Phase 4 (2350ms): flash → start
+  setTimeout(()=>{
+    void elFlash.offsetWidth;
+    elFlash.classList.add('show');
+    overlay.classList.add('hidden');
+    setTimeout(()=>{ elFlash.classList.remove('show'); onComplete(); }, 200);
+  }, 2350);
 }
 
 // ── NO-MATCH TIMER ──
@@ -364,6 +585,8 @@ function renderBoard(){
         const hp=document.createElement('div');hp.className='bomb-timer corrupt-hp';hp.textContent='♦'.repeat(cell.corruptHp??3);div.appendChild(hp);
       }
       if(selectedCell&&selectedCell[0]===r&&selectedCell[1]===c)div.classList.add('selected');
+      // spawn flash for new gimmick panels
+      if(cell.spawned){div.classList.add('gimmick-spawn');cell.spawned=false;}
       div.addEventListener('click',()=>onCellClick(r,c));
       el.appendChild(div);
     }
@@ -522,9 +745,9 @@ function fillTop(){
 function makeNewPanel(){
   if(gameVariant==='pure')return{type:'normal',color:COLORS[Math.floor(Math.random()*COLORS.length)]};
   const roll=Math.random();
-  if(phase>=3&&roll<0.05)return{type:'bomb',color:'bomb',bombTimer:6};
-  if(phase>=2&&roll<0.09&&countVirus()<MAX_VIRUS)return{type:'virus',color:'virus',virusHits:0};
-  if(phase>=3&&roll<0.12)return{type:'corrupt',color:'corrupt',corruptHp:3};
+  if(phase>=3&&roll<0.05)return{type:'bomb',color:'bomb',bombTimer:6,spawned:true};
+  if(phase>=2&&roll<0.09&&countVirus()<MAX_VIRUS)return{type:'virus',color:'virus',virusHits:0,spawned:true};
+  if(phase>=3&&roll<0.12)return{type:'corrupt',color:'corrupt',corruptHp:3,spawned:true};
   return{type:'normal',color:COLORS[Math.floor(Math.random()*COLORS.length)]};
 }
 function countVirus(){let n=0;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(board[r][c]?.type==='virus')n++;return n;}
@@ -542,7 +765,7 @@ function spreadVirus(){
     }
   }
   const budget=MAX_VIRUS-countVirus();
-  nv.slice(0,budget).forEach(([r,c])=>{board[r][c]={type:'virus',color:'virus',virusHits:0};});
+  nv.slice(0,budget).forEach(([r,c])=>{board[r][c]={type:'virus',color:'virus',virusHits:0,spawned:true};});
 }
 
 function tickBombs(){
@@ -550,7 +773,7 @@ function tickBombs(){
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
     if(board[r][c]?.type==='bomb'){
       board[r][c].bombTimer=(board[r][c].bombTimer||5)-1;
-      if(board[r][c].bombTimer<=0){board[r][c]={type:'corrupt',color:'corrupt',corruptHp:3};addError(15);any=true;}
+      if(board[r][c].bombTimer<=0){board[r][c]={type:'corrupt',color:'corrupt',corruptHp:3,spawned:true};addError(15);any=true;}
     }
   }
   if(any){renderBoard();shakeBoard();}
@@ -588,8 +811,8 @@ function updatePhase(){
 }
 
 function addBombAndVirus(){
-  if(phase>=3)for(let i=0;i<2;i++){const r=Math.floor(Math.random()*(ROWS-2))+1,c=Math.floor(Math.random()*COLS);if(board[r][c]?.type==='normal')board[r][c]={type:'bomb',color:'bomb',bombTimer:5};}
-  if(phase>=2&&countVirus()<MAX_VIRUS){const r=Math.floor(Math.random()*(ROWS-2))+1,c=Math.floor(Math.random()*COLS);if(board[r][c]?.type==='normal')board[r][c]={type:'virus',color:'virus',virusHits:0};}
+  if(phase>=3)for(let i=0;i<2;i++){const r=Math.floor(Math.random()*(ROWS-2))+1,c=Math.floor(Math.random()*COLS);if(board[r][c]?.type==='normal')board[r][c]={type:'bomb',color:'bomb',bombTimer:5,spawned:true};}
+  if(phase>=2&&countVirus()<MAX_VIRUS){const r=Math.floor(Math.random()*(ROWS-2))+1,c=Math.floor(Math.random()*COLS);if(board[r][c]?.type==='normal')board[r][c]={type:'virus',color:'virus',virusHits:0,spawned:true};}
   renderBoard();
 }
 
@@ -644,5 +867,23 @@ function endGame(){
 function restartGame(){document.getElementById('gameover-screen').classList.remove('show');startGame(gameMode,gameVariant);}
 function goToTitle(){document.getElementById('gameover-screen').classList.remove('show');document.getElementById('game-wrapper').style.display='none';document.getElementById('title-screen').style.display='flex';renderTitleHS();}
 </script>
+
+<!-- INTRO SEQUENCE -->
+<div id="intro-overlay" class="hidden">
+  <div id="intro-noise"></div>
+  <div id="intro-glitch-lines">
+    <div class="glitch-line" style="top:18%"></div>
+    <div class="glitch-line" style="top:35%;background:rgba(255,0,128,0.5)"></div>
+    <div class="glitch-line" style="top:52%"></div>
+    <div class="glitch-line" style="top:71%;background:rgba(255,0,128,0.4)"></div>
+    <div class="glitch-line" style="top:88%"></div>
+  </div>
+  <div id="intro-board-ghost"></div>
+  <div id="intro-scan-trail"></div>
+  <div id="intro-scan"></div>
+  <div id="intro-init">INITIALIZE...</div>
+  <div id="intro-jackin">JACK IN</div>
+</div>
+<div id="intro-flash"></div>
 </body>
 </html>
