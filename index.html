@@ -71,10 +71,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .error-label{color:var(--panel-red);}.error-fill{background:linear-gradient(90deg,#880000,var(--panel-red));}
 .error-wrap .gauge-track.danger{animation:errorblink .3s infinite;}
 @keyframes errorblink{50%{background:rgba(255,0,0,.2);}}
-.skill-label{color:var(--panel-purple);}.skill-fill{background:linear-gradient(90deg,#440088,var(--panel-purple));}
 .od-label{color:var(--overdrive);}.od-fill{background:linear-gradient(90deg,#883300,var(--overdrive));}
-.skill-ready-dot{display:inline-block;width:6px;height:6px;background:var(--panel-purple);border-radius:50%;margin-left:5px;animation:skillready 1s infinite;}
-@keyframes skillready{50%{opacity:0;transform:scale(1.5);}}
 
 #phase-bar{width:100%;max-width:560px;display:flex;align-items:center;justify-content:space-between;padding:2px 14px 3px;flex-shrink:0;}
 .phase-label{font-size:9px;color:var(--dim);letter-spacing:2px;}
@@ -105,10 +102,6 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .bomb-timer{position:absolute;top:2px;right:3px;font-size:9px;color:var(--overdrive);font-weight:bold;font-family:'Orbitron',sans-serif;}
 
 /* SKILL BAR */
-#skill-bar{width:100%;max-width:560px;display:flex;gap:5px;padding:4px 14px 6px;flex-shrink:0;}
-.skill-btn{flex:1;padding:5px 3px;font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;background:rgba(204,68,255,.08);border:1px solid rgba(204,68,255,.3);color:rgba(204,68,255,.5);cursor:not-allowed;text-align:center;transition:all .2s;line-height:1.4;}
-.skill-btn.ready{color:var(--panel-purple);border-color:var(--panel-purple);cursor:pointer;background:rgba(204,68,255,.15);box-shadow:0 0 8px rgba(204,68,255,.3);}
-.skill-btn.ready:hover{background:rgba(204,68,255,.3);box-shadow:0 0 15px rgba(204,68,255,.5);transform:translateY(-2px);}
 
 /* OD BTN */
 #od-btn-wrap{width:100%;max-width:560px;padding:0 14px 6px;flex-shrink:0;}
@@ -144,6 +137,16 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 #od-announce.show{animation:odshow 2.5s forwards;}
 @keyframes odshow{0%{opacity:0;transform:translate(-50%,-50%) scaleX(.2);}20%{opacity:1;transform:translate(-50%,-50%) scaleX(1.05);}80%{opacity:1;}100%{opacity:0;}}
 
+.go-rank-wrap{text-align:center;margin-bottom:20px;}
+.go-rank-label{font-size:10px;color:var(--dim);letter-spacing:3px;margin-bottom:6px;}
+.go-rank{font-family:'Orbitron',sans-serif;font-size:56px;font-weight:900;letter-spacing:4px;}
+.go-rank.rank-C{color:#888;text-shadow:0 0 10px #888;}
+.go-rank.rank-B{color:#4af;text-shadow:0 0 14px #4af,0 0 30px #4af;}
+.go-rank.rank-A{color:var(--neon-green);text-shadow:0 0 14px var(--neon-green),0 0 30px var(--neon-green);}
+.go-rank.rank-S{color:var(--neon-yellow);text-shadow:0 0 20px var(--neon-yellow),0 0 50px var(--neon-yellow);animation:rankshine 1s infinite alternate;}
+.go-rank.rank-SS{color:var(--overdrive);text-shadow:0 0 20px var(--overdrive),0 0 60px var(--overdrive);animation:rankshine .7s infinite alternate;}
+.go-rank.rank-SSS{color:var(--neon-pink);text-shadow:0 0 24px var(--neon-pink),0 0 70px var(--neon-pink);animation:rankshine .4s infinite alternate;}
+@keyframes rankshine{from{filter:brightness(1);}to{filter:brightness(1.5);}}
 /* GAME OVER */
 #gameover-screen{position:fixed;inset:0;z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(2,10,18,.92);}
 #gameover-screen.show{display:flex;animation:gofadein .5s ease;}
@@ -166,16 +169,6 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .shaking{animation:shake .3s ease;}
 #board-container::after{content:'';position:absolute;left:0;right:0;height:2px;background:rgba(0,245,255,.15);animation:scanline 4s linear infinite;pointer-events:none;}
 @keyframes scanline{from{top:0;}to{top:100%;}}
-  /* BGM */
-#bgm-btn {
-  position: fixed; bottom: 12px; right: 12px;
-  z-index: 400; font-size: 20px;
-  background: rgba(0,0,0,0.5);
-  border: 1px solid rgba(0,245,255,0.3);
-  border-radius: 50%; width: 36px; height: 36px;
-  cursor: pointer; color: var(--neon-cyan);
-  display: flex; align-items: center; justify-content: center;
-}
 </style>
 </head>
 <body>
@@ -206,7 +199,6 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   </div>
   <div id="gauges">
     <div class="gauge-wrap error-wrap"><div class="gauge-label error-label">ERROR RATE</div><div class="gauge-track" id="error-track"><div class="gauge-fill error-fill" id="error-fill" style="width:0%"></div></div></div>
-    <div class="gauge-wrap"><div class="gauge-label skill-label">SKILL<span id="skill-ready-dot" style="display:none" class="skill-ready-dot"></span></div><div class="gauge-track"><div class="gauge-fill skill-fill" id="skill-fill" style="width:0%"></div></div></div>
     <div class="gauge-wrap"><div class="gauge-label od-label">OVERDRIVE</div><div class="gauge-track"><div class="gauge-fill od-fill" id="od-fill" style="width:0%"></div></div></div>
   </div>
   <div id="phase-bar">
@@ -218,13 +210,6 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
     <div class="phase-label" id="phase-name-disp">PHASE 1</div>
   </div>
   <div id="board-container"><div id="board"></div></div>
-  <div id="skill-bar">
-    <button class="skill-btn" id="sk0" onclick="useSkill(0)">EMP<br>PULSE</button>
-    <button class="skill-btn" id="sk1" onclick="useSkill(1)">DATA<br>REWRITE</button>
-    <button class="skill-btn" id="sk2" onclick="useSkill(2)">COMPR-<br>ESSION</button>
-    <button class="skill-btn" id="sk3" onclick="useSkill(3)">FIRE-<br>WALL</button>
-    <button class="skill-btn" id="sk4" onclick="useSkill(4)">RE-<br>BOOT</button>
-  </div>
   <div id="od-btn-wrap"><button id="od-btn" onclick="activateOverdrive()">⚡ OVERDRIVE ⚡</button></div>
 </div>
 
@@ -237,9 +222,10 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 <div id="od-announce">⚡ OVERDRIVE ⚡</div>
 
 <div id="gameover-screen">
-  <div class="go-title" id="go-title-text">SYSTEM CRASH</div>
+  <div class="go-title" id="go-title-text">SYSTEM LIMIT REACHED</div>
   <div class="go-score-label">FINAL SCORE</div>
   <div class="go-score" id="go-score">0</div>
+  <div class="go-rank-wrap"><div class="go-rank-label">SYSTEM RANK</div><div class="go-rank" id="go-rank-disp">C</div></div>
   <div class="go-new-record-badge" id="go-nr-badge">★ NEW RECORD ★</div>
   <div class="go-hs"><div class="go-hs-title">— TOP 3 SCORES —</div><div id="go-hs-list"></div></div>
   <div class="go-btns">
@@ -256,9 +242,9 @@ const COLOR_CLASS={red:'p-red',blue:'p-blue',yellow:'p-yellow',purple:'p-purple'
 
 let board=[],selectedCell=null,score=0,combo=0,comboTimer=null;
 let timeLeft=90,gameMode=90,gameVariant='normal',gameRunning=false,gameTimer=null;
-let phase=1,errorRate=0,skillGauge=0,odGauge=0;
-let odActive=false,odTimer=null,firewallActive=false,firewallTimer=null;
-let empActive=false,empTimer=null,currentRank='NORMAL';
+let phase=1,errorRate=0,odGauge=0;
+let odActive=false,odTimer=null;
+let currentRank='NORMAL';
 let prevHighScore=0,recordBroken=false;
 let noMatchSeconds=0,noMatchTimer=null;
 let highScores=JSON.parse(localStorage.getItem('odhc_scores')||'[]');
@@ -275,8 +261,8 @@ renderTitleHS();
 
 function startGame(mode,variant){
   gameMode=mode;gameVariant=variant||'normal';timeLeft=mode;
-  score=combo=errorRate=skillGauge=odGauge=noMatchSeconds=0;
-  odActive=firewallActive=empActive=false;phase=1;
+  score=combo=errorRate=odGauge=noMatchSeconds=0;
+  odActive=false;phase=1;
   selectedCell=null;recordBroken=false;currentRank='NORMAL';
   prevHighScore=getTop3()[0]?.score||0;
 
@@ -382,13 +368,10 @@ function updateHUD(){
   document.getElementById('time-disp').textContent=timeLeft;
   document.getElementById('time-disp').classList.toggle('danger',timeLeft<=10);
   document.getElementById('error-fill').style.width=Math.min(errorRate,100)+'%';
-  document.getElementById('skill-fill').style.width=Math.min(skillGauge,100)+'%';
   document.getElementById('od-fill').style.width=Math.min(odGauge,100)+'%';
   document.getElementById('error-track').classList.toggle('danger',errorRate>=75);
   document.getElementById('danger-overlay').classList.toggle('show',errorRate>=70);
-  document.getElementById('skill-ready-dot').style.display=skillGauge>=100?'inline-block':'none';
   document.getElementById('od-btn').classList.toggle('ready',odGauge>=100&&!odActive);
-  for(let i=0;i<5;i++)document.getElementById('sk'+i).classList.toggle('ready',skillGauge>=100);
   const re=document.getElementById('rank-disp');re.textContent=currentRank;re.className='rank-badge rank-'+currentRank;
   document.getElementById('combo-disp').textContent=combo>1?combo+'x COMBO':'';
   if(gameVariant!=='pure'){
@@ -470,8 +453,7 @@ function processMatches(matches){
   score+=gained;
   let pu=0,gr=0,re=0,bl=0;
   matches.forEach(([r,c])=>{const col=board[r][c].color;if(col==='purple')pu++;if(col==='green')gr++;if(col==='red')re++;if(col==='blue')bl++;});
-  skillGauge=Math.min(100,skillGauge+pu*18+matches.length*4);
-  odGauge=Math.min(100,odGauge+matches.length*6+pu*10);
+  odGauge=Math.min(100,odGauge+matches.length*6+pu*20);
   if(bl>0)addError(-bl*5);if(gr>0)addError(-gr*8);if(re>0)score+=re*50*(odActive?2:1);
   updateRank();showScorePopup(gained);
   if(combo>=3)showComboPopup(combo);
@@ -509,7 +491,7 @@ function processMatches(matches){
     setTimeout(()=>{
       const chain=findMatches();
       if(chain.length>0){resetNoMatchTimer();processMatches(chain);}
-      else{comboTimer=setTimeout(()=>{if(combo>0){addError(combo>5?5:2);combo=0;updateHUD();}},2500);updateHUD();}
+      else{const comboDelay=2500+gr*1500;comboTimer=setTimeout(()=>{if(combo>0){addError(combo>5?5:2);combo=0;updateHUD();}},comboDelay);updateHUD();}
     },150);
   },350);
 }
@@ -566,12 +548,7 @@ function tickBombs(){
 }
 
 // ── SKILLS ──
-function useSkill(idx){if(!gameRunning||skillGauge<100)return;skillGauge=0;[skillEMP,skillRewrite,skillCompress,skillFirewall,skillReboot][idx]();updateHUD();renderBoard();}
-function skillEMP(){empActive=true;addError(-15);if(empTimer)clearTimeout(empTimer);empTimer=setTimeout(()=>{empActive=false;},5000);}
-function skillRewrite(){const t=COLORS[Math.floor(Math.random()*COLORS.length)],rep=COLORS[Math.floor(Math.random()*COLORS.length)];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(board[r][c]?.color===t&&board[r][c]?.type==='normal')board[r][c].color=rep;}
-function skillCompress(){board[ROWS-1]=Array(COLS).fill(null);applyGravity();fillTop();score+=200;}
-function skillFirewall(){firewallActive=true;if(firewallTimer)clearTimeout(firewallTimer);firewallTimer=setTimeout(()=>{firewallActive=false;},8000);}
-function skillReboot(){for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const t=board[r][c]?.type;if(t==='virus'||t==='corrupt'||t==='bomb')board[r][c]=makePanel();}const ps=[];for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)ps.push([r,c]);ps.sort(()=>Math.random()-.5);ps.forEach(([r,c])=>{if(board[r][c]?.type==='normal')board[r][c].color=COLORS[Math.floor(Math.random()*COLORS.length)];});}
+// Skills removed
 
 // ── OVERDRIVE ──
 function activateOverdrive(){
@@ -610,8 +587,17 @@ function addBombAndVirus(){
 function announcePhase(){const el=document.getElementById('phase-announce');el.textContent='PHASE '+phase;el.classList.remove('show');void el.offsetWidth;el.classList.add('show');}
 
 // ── ERROR ──
-function addError(amount){if(firewallActive&&amount>0)return;errorRate=Math.max(0,Math.min(100,errorRate+amount));if(errorRate>=100)endGame();}
+function addError(amount){errorRate=Math.max(0,Math.min(100,errorRate+amount));if(errorRate>=100)endGame();}
 
+
+function getScoreRank(s){
+  if(s>=200000)return{rank:'SSS',cls:'rank-SSS'};
+  if(s>=170000)return{rank:'SS', cls:'rank-SS'};
+  if(s>=150000)return{rank:'S',  cls:'rank-S'};
+  if(s>=120000)return{rank:'A',  cls:'rank-A'};
+  if(s>=90000) return{rank:'B',  cls:'rank-B'};
+  return{rank:'C',cls:'rank-C'};
+}
 // ── FX ──
 function showComboPopup(n){const el=document.getElementById('combo-popup');el.textContent=n+'x COMBO!';el.classList.remove('show');void el.offsetWidth;el.classList.add('show');}
 function showScorePopup(val){const p=document.createElement('div');p.className='score-popup';p.textContent='+'+val.toLocaleString();p.style.left=(30+Math.random()*40)+'%';p.style.top=(40+Math.random()*20)+'%';document.body.appendChild(p);setTimeout(()=>p.remove(),1000);}
@@ -623,7 +609,8 @@ function endGame(){
   if(!gameRunning)return;
   gameRunning=false;clearInterval(gameTimer);
   if(noMatchTimer){clearInterval(noMatchTimer);noMatchTimer=null;}
-  [odTimer,comboTimer,firewallTimer,empTimer].forEach(t=>{if(t)clearTimeout(t);});
+  if(odTimer)clearTimeout(odTimer);
+  if(comboTimer)clearTimeout(comboTimer);
   document.getElementById('od-overlay').classList.remove('active');
   document.getElementById('danger-overlay').classList.remove('show');
   document.getElementById('nomatch-overlay').classList.remove('warn');
@@ -634,6 +621,9 @@ function endGame(){
   localStorage.setItem('odhc_scores',JSON.stringify(highScores));
 
   const isNew=recordBroken||(score>0&&score>=(getTop3()[0]?.score||0));
+  const sr=getScoreRank(score);
+  const rd=document.getElementById('go-rank-disp');rd.textContent=sr.rank;rd.className='go-rank '+sr.cls;
+  document.getElementById('go-title-text').textContent='SYSTEM LIMIT REACHED';
   document.getElementById('gameover-screen').classList.add('show');
   const gs=document.getElementById('go-score');gs.textContent=score.toLocaleString();gs.classList.toggle('new-record',isNew);
   document.getElementById('go-nr-badge').classList.toggle('show',isNew);
@@ -642,50 +632,8 @@ function endGame(){
   ).join('');
 }
 
-function restartGame(){document.getElementById('gameover-screen').classList.remove('show');document.getElementById('go-title-text').textContent='SYSTEM CRASH';startGame(gameMode,gameVariant);}
-function goToTitle(){document.getElementById('gameover-screen').classList.remove('show');document.getElementById('go-title-text').textContent='SYSTEM CRASH';document.getElementById('game-wrapper').style.display='none';document.getElementById('title-screen').style.display='flex';renderTitleHS();}
-</script>
-  <!-- BGM -->
-<audio id="bgm" src="bgm_game.mp3" loop preload="auto"></audio>
-<button id="bgm-btn" onclick="toggleBGM()" title="BGM ON/OFF">🔊</button>
-
-<script>
-const bgm = document.getElementById('bgm');
-const bgmBtn = document.getElementById('bgm-btn');
-let bgmEnabled = true;
-
-function startBGM() {
-  if (bgmEnabled) {
-    bgm.volume = 0.5;
-    bgm.play().catch(() => {});
-  }
-}
-
-function toggleBGM() {
-  bgmEnabled = !bgmEnabled;
-  if (bgmEnabled) {
-    bgm.play().catch(() => {});
-    bgmBtn.textContent = '🔊';
-  } else {
-    bgm.pause();
-    bgmBtn.textContent = '🔇';
-  }
-}
-
-// 既存の startGame 関数を上書きして BGM 開始を追加
-const _origStartGame = startGame;
-window.startGame = function(mode, variant) {
-  _origStartGame(mode, variant);
-  startBGM();
-};
-
-// ゲームオーバー時に BGM を止める
-const _origEndGame = endGame;
-window.endGame = function() {
-  _origEndGame();
-  bgm.pause();
-  bgm.currentTime = 0;
-};
+function restartGame(){document.getElementById('gameover-screen').classList.remove('show');startGame(gameMode,gameVariant);}
+function goToTitle(){document.getElementById('gameover-screen').classList.remove('show');document.getElementById('game-wrapper').style.display='none';document.getElementById('title-screen').style.display='flex';renderTitleHS();}
 </script>
 </body>
 </html>
