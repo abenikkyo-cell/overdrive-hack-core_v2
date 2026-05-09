@@ -42,6 +42,10 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .hud-score-box{text-align:center;}.hud-score-label{font-size:8px;color:var(--dim);letter-spacing:2px;}
 .hud-score-val{font-family:'Orbitron',sans-serif;font-size:24px;font-weight:900;color:var(--neon-yellow);text-shadow:0 0 10px var(--neon-yellow);transition:color .1s;}
 .hud-score-val.new-record{color:#fff;text-shadow:0 0 20px var(--neon-pink),0 0 40px var(--neon-pink);}
+.hud-score-val.od-active{color:#fff;text-shadow:0 0 10px var(--overdrive),0 0 30px var(--overdrive),0 0 60px rgba(255,102,0,.6);animation:odscoreshine .5s infinite alternate;}
+@keyframes odscoreshine{from{text-shadow:0 0 10px var(--overdrive),0 0 30px var(--overdrive);}to{text-shadow:0 0 20px #ffcc00,0 0 50px var(--overdrive),0 0 90px rgba(255,102,0,.5);}}
+.hud-score-box.od-active{background:rgba(255,102,0,.08);border-radius:6px;box-shadow:0 0 16px rgba(255,102,0,.4),0 0 32px rgba(255,102,0,.2);animation:odboxglow .5s infinite alternate;}
+@keyframes odboxglow{from{box-shadow:0 0 12px rgba(255,102,0,.3);}to{box-shadow:0 0 28px rgba(255,102,0,.7),0 0 50px rgba(255,102,0,.3);}}
 .hud-time-box{text-align:right;}.hud-time-label{font-size:8px;color:var(--dim);letter-spacing:2px;}
 .hud-time-val{font-family:'Orbitron',sans-serif;font-size:24px;font-weight:700;color:var(--neon-cyan);text-shadow:0 0 10px var(--neon-cyan);}
 .hud-time-val.danger{color:var(--panel-red);text-shadow:0 0 10px var(--panel-red);animation:timeblink .5s infinite;}
@@ -104,16 +108,19 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 /* SKILL BAR */
 
 /* OD BTN */
-#od-btn-wrap{width:100%;max-width:560px;padding:0 14px 6px;flex-shrink:0;}
+#od-btn-wrap{width:100%;max-width:560px;padding:3px 14px 0;flex-shrink:0;}
 #od-btn{width:100%;padding:8px;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:4px;background:transparent;border:2px solid rgba(255,102,0,.3);color:rgba(255,102,0,.3);cursor:not-allowed;transition:all .2s;}
 #od-btn.ready{border-color:var(--overdrive);color:var(--overdrive);cursor:pointer;text-shadow:0 0 10px var(--overdrive);box-shadow:0 0 15px rgba(255,102,0,.3);animation:odbtnpulse 1s infinite;}
 @keyframes odbtnpulse{50%{box-shadow:0 0 30px rgba(255,102,0,.6);}}
 #od-btn.ready:hover{background:rgba(255,102,0,.2);}
 
 /* OVERLAYS */
-#od-overlay{position:fixed;inset:0;pointer-events:none;z-index:50;opacity:0;transition:opacity .5s;}
-#od-overlay.active{opacity:1;background:radial-gradient(ellipse at center,transparent 40%,rgba(255,102,0,.12) 100%);animation:odoblink .5s infinite alternate;}
-@keyframes odoblink{from{box-shadow:inset 0 0 60px rgba(255,102,0,.2);}to{box-shadow:inset 0 0 120px rgba(255,102,0,.4);}}
+#od-overlay{position:fixed;inset:0;pointer-events:none;z-index:50;opacity:0;transition:opacity .5s;border:0px solid transparent;}
+#od-overlay.active{opacity:1;border:4px solid var(--overdrive);animation:odoblink .6s infinite alternate;}
+@keyframes odoblink{
+  from{box-shadow:inset 0 0 40px rgba(255,102,0,.25),0 0 30px rgba(255,102,0,.4),inset 0 0 0px transparent;border-color:rgba(255,102,0,.7);}
+  to  {box-shadow:inset 0 0 80px rgba(255,102,0,.45),0 0 80px rgba(255,102,0,.8),inset 0 0 60px rgba(255,102,0,.1);border-color:rgba(255,180,0,1);}
+}
 #danger-overlay{position:fixed;inset:0;pointer-events:none;z-index:49;opacity:0;background:radial-gradient(ellipse at center,transparent 30%,rgba(255,0,0,.15) 100%);}
 #danger-overlay.show{opacity:1;animation:dangerpulse .4s infinite alternate;}
 @keyframes dangerpulse{to{background:radial-gradient(ellipse at center,transparent 30%,rgba(255,0,0,.35) 100%);}}
@@ -189,10 +196,11 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 <div id="game-wrapper" style="display:none">
   <div id="hud">
     <div class="hud-title">OVERDRIVE<br>HACK CORE</div>
-    <div class="hud-score-box"><div class="hud-score-label">SCORE</div><div class="hud-score-val" id="score-disp">0</div></div>
+    <div class="hud-score-box" id="hud-score-box"><div class="hud-score-label">SCORE</div><div class="hud-score-val" id="score-disp">0</div></div>
     <div class="hud-time-box"><div class="hud-time-label">TIME</div><div class="hud-time-val" id="time-disp">90</div></div>
   </div>
   <div id="nomatch-bar-wrap"><div id="nomatch-bar-track"><div id="nomatch-bar-fill"></div></div></div>
+  <div id="od-btn-wrap"><button id="od-btn" onclick="activateOverdrive()">⚡ OVERDRIVE ⚡</button></div>
   <div id="status-bar">
     <div class="rank-badge rank-NORMAL" id="rank-disp">NORMAL</div>
     <div class="combo-disp" id="combo-disp"></div>
@@ -210,7 +218,6 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
     <div class="phase-label" id="phase-name-disp">PHASE 1</div>
   </div>
   <div id="board-container"><div id="board"></div></div>
-  <div id="od-btn-wrap"><button id="od-btn" onclick="activateOverdrive()">⚡ OVERDRIVE ⚡</button></div>
 </div>
 
 <div id="od-overlay"></div>
@@ -372,6 +379,8 @@ function updateHUD(){
   document.getElementById('error-track').classList.toggle('danger',errorRate>=75);
   document.getElementById('danger-overlay').classList.toggle('show',errorRate>=70);
   document.getElementById('od-btn').classList.toggle('ready',odGauge>=100&&!odActive);
+  document.getElementById('score-disp').classList.toggle('od-active',odActive);
+  document.getElementById('hud-score-box').classList.toggle('od-active',odActive);
   const re=document.getElementById('rank-disp');re.textContent=currentRank;re.className='rank-badge rank-'+currentRank;
   document.getElementById('combo-disp').textContent=combo>1?combo+'x COMBO':'';
   if(gameVariant!=='pure'){
