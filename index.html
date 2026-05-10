@@ -431,6 +431,7 @@ function startGame(mode,variant){
   selectedCell=null;recordBroken=false;currentRank='NORMAL';
   prevHighScore=getTop3()[0]?.score||0;
 
+  initAudio();  // create AudioContext on user gesture + pre-load SE buffers
   document.getElementById('title-screen').style.display='none';
   document.getElementById('game-wrapper').style.display='flex';
   document.getElementById('gameover-screen').classList.remove('show');
@@ -753,7 +754,7 @@ function makeNewPanel(){
   if(gameVariant==='pure')return{type:'normal',color:COLORS[Math.floor(Math.random()*COLORS.length)]};
   const roll=Math.random();
   if(phase>=3&&roll<0.05)return{type:'bomb',color:'bomb',bombTimer:6,spawned:true};
-  if(phase>=2&&roll<0.09&&countVirus()<MAX_VIRUS){setTimeout(()=>playSE('se_virus',0.5,true),50);return{type:'virus',color:'virus',virusHits:0,spawned:true};}
+  if(phase>=2&&roll<0.09&&countVirus()<MAX_VIRUS){playSE('se_virus',0.5,true);return{type:'virus',color:'virus',virusHits:0,spawned:true};}
   if(phase>=3&&roll<0.12)return{type:'corrupt',color:'corrupt',corruptHp:3,spawned:true};
   return{type:'normal',color:COLORS[Math.floor(Math.random()*COLORS.length)]};
 }
@@ -794,7 +795,6 @@ function tickBombs(){
 // ── OVERDRIVE ──
 function activateOverdrive(){
   if(!gameRunning||odGauge<100||odActive)return;
-  playSE('se_overdrive');  // fire immediately before any DOM ops
   odGauge=0;odActive=true;
   document.getElementById('od-overlay').classList.add('active');
   const ann=document.getElementById('od-announce');ann.classList.remove('show');void ann.offsetWidth;ann.classList.add('show');
@@ -880,42 +880,81 @@ function restartGame(){document.getElementById('gameover-screen').classList.remo
 function goToTitle(){document.getElementById('gameover-screen').classList.remove('show');document.getElementById('game-wrapper').style.display='none';document.getElementById('title-screen').style.display='flex';renderTitleHS();}
 
 // ============================================================
-// AUDIO ENGINE
+// AUDIO ENGINE — AudioContext + pre-decoded buffers
 // ============================================================
 const BGM_VOL = 0.5;
 const SE_VOL  = 0.8;
 
-// Tracks which "exclusive" sounds are currently playing
-const _seExclusive = {};
+let _actx = null;           // AudioContext (created on first user gesture)
+let _bgmSource = null;      // current BGM BufferSource
+let _bgmGain = null;        // BGM gain node
+const _seBuffers = {};      // pre-decoded SE buffers keyed by id
+const _seExclusive = {};    // tracks if exclusive SE is playing
+
+// SE files to pre-load (se_overdrive removed, se_swap removed)
+const SE_FILES = {
+  se_select:       'se_select.mp3',
+  se_initialize:   'se_initialize.mp3',
+  se_match:        'se_match.mp3',
+  se_combo:        'se_combo.mp3',
+  se_virus:        'se_virus.mp3',
+  se_virus_hit:    'se_virus_hit.mp3',
+  se_bomb_explode: 'se_bomb_explode.mp3',
+  se_gameover:     'se_gameover.mp3',
+};
+
+// Called on first user interaction (startGame button tap)
+function initAudio() {
+  if (_actx) return;
+  _actx = new (window.AudioContext || window.webkitAudioContext)();
+  // Pre-decode all SE files
+  Object.entries(SE_FILES).forEach(([id, file]) => {
+    fetch(file)
+      .then(r => r.arrayBuffer())
+      .then(buf => _actx.decodeAudioData(buf))
+      .then(decoded => { _seBuffers[id] = decoded; })
+      .catch(() => {}); // missing file = silent
+  });
+}
 
 function playBGM() {
-  const bgm = document.getElementById('bgm');
-  if (!bgm) return;
-  bgm.volume = BGM_VOL;
-  bgm.currentTime = 0;
-  bgm.play().catch(() => {});
+  if (!_actx) return;
+  if (_bgmSource) { try { _bgmSource.stop(); } catch(e){} }
+  fetch('bgm_game.mp3')
+    .then(r => r.arrayBuffer())
+    .then(buf => _actx.decodeAudioData(buf))
+    .then(decoded => {
+      _bgmGain = _actx.createGain();
+      _bgmGain.gain.value = BGM_VOL;
+      _bgmGain.connect(_actx.destination);
+      _bgmSource = _actx.createBufferSource();
+      _bgmSource.buffer = decoded;
+      _bgmSource.loop = true;
+      _bgmSource.connect(_bgmGain);
+      _bgmSource.start(0);
+    }).catch(() => {});
 }
 
 function stopBGM() {
-  const bgm = document.getElementById('bgm');
-  if (!bgm) return;
-  bgm.pause();
-  bgm.currentTime = 0;
+  if (_bgmSource) { try { _bgmSource.stop(); } catch(e){} _bgmSource = null; }
 }
 
-// playSE: new Audio() based — works reliably on iOS Safari.
-// exclusive=true → skip if same sound is already playing (virus/bomb).
+// playSE: zero-latency buffer playback.
+// exclusive=true → skip new play if same sound already playing.
 function playSE(id, volumeOverride, exclusive) {
-  const src = document.getElementById(id);
-  if (!src || !src.src) return;
-  if (exclusive && _seExclusive[id]) return;  // already playing, skip
-  const a = new Audio(src.src);
-  a.volume = volumeOverride !== undefined ? volumeOverride : SE_VOL;
+  if (!_actx || !_seBuffers[id]) return;
+  if (exclusive && _seExclusive[id]) return;
+  const gainNode = _actx.createGain();
+  gainNode.gain.value = volumeOverride !== undefined ? volumeOverride : SE_VOL;
+  gainNode.connect(_actx.destination);
+  const src = _actx.createBufferSource();
+  src.buffer = _seBuffers[id];
+  src.connect(gainNode);
   if (exclusive) {
     _seExclusive[id] = true;
-    a.addEventListener('ended', () => { _seExclusive[id] = false; }, { once: true });
+    src.onended = () => { _seExclusive[id] = false; };
   }
-  a.play().catch(() => {});
+  src.start(0);
 }
 </script>
 
@@ -937,17 +976,5 @@ function playSE(id, volumeOverride, exclusive) {
 </div>
 <div id="intro-flash"></div>
 
-<!-- AUDIO -->
-<audio id="bgm"              src="bgm_game.mp3"       loop preload="auto"></audio>
-<audio id="se_select"        src="se_select.mp3"            preload="auto"></audio>
-<audio id="se_initialize"    src="se_initialize.mp3"        preload="auto"></audio>
-<audio id="se_match"         src="se_match.mp3"             preload="auto"></audio>
-<audio id="se_combo"         src="se_combo.mp3"             preload="auto"></audio>
-<audio id="se_swap"          src="se_swap.mp3"              preload="auto"></audio>
-<audio id="se_overdrive"     src="se_overdrive.mp3"         preload="auto"></audio>
-<audio id="se_virus"         src="se_virus.mp3"             preload="auto"></audio>
-<audio id="se_virus_hit"     src="se_virus_hit.mp3"         preload="auto"></audio>
-<audio id="se_bomb_explode"  src="se_bomb_explode.mp3"      preload="auto"></audio>
-<audio id="se_gameover"      src="se_gameover.mp3"          preload="auto"></audio>
 </body>
 </html>
