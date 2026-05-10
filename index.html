@@ -483,32 +483,41 @@ function playIntro(onComplete){
   });
   overlay.classList.remove('hidden');
 
-  // Phase 1 (0ms): INITIALIZE... + noise + glitch simultaneously
+  // Pre-fetch se_initialize immediately so it's ready by Phase 1
+  if (_actx && !_seBuffers['se_initialize']) {
+    fetch('se_initialize.mp3')
+      .then(r => r.arrayBuffer())
+      .then(buf => _actx.decodeAudioData(buf))
+      .then(decoded => { _seBuffers['se_initialize'] = decoded; })
+      .catch(() => {});
+  }
+
+  // Phase 1 (300ms): slight delay so se_initialize decode completes first
   setTimeout(()=>{
     elInit.classList.add('show');
     void elNoise.offsetWidth; void elGlitch.offsetWidth;
     elNoise.classList.add('show');
     elGlitch.classList.add('show');
     playSE('se_initialize');
-  }, 30);
+  }, 300);
 
-  // Phase 2 (700ms): scan + board ghost
+  // Phase 2 (970ms): scan + board ghost
   setTimeout(()=>{
     elInit.classList.remove('show');
     void elGhost.offsetWidth; void elScan.offsetWidth; void elTrail.offsetWidth;
     elGhost.classList.add('show');
     elScan.classList.add('show');
     elTrail.classList.add('show');
-  }, 700);
+  }, 970);
 
-  // Phase 3 (1650ms): JACK IN
+  // Phase 3 (1920ms): JACK IN
   setTimeout(()=>{
     elGhost.classList.remove('show');
     void elJackin.offsetWidth;
     elJackin.classList.add('show');
-  }, 1650);
+  }, 1920);
 
-  // Phase 4 (2350ms): flash → start
+  // Phase 4 (2620ms): flash → start
   setTimeout(()=>{
     void elFlash.offsetWidth;
     elFlash.classList.add('show');
@@ -518,7 +527,7 @@ function playIntro(onComplete){
       playBGM();   // BGM starts exactly when player gets control
       onComplete();
     }, 200);
-  }, 2350);
+  }, 2620);
 }
 
 // ── NO-MATCH TIMER ──
@@ -795,6 +804,7 @@ function tickBombs(){
 // ── OVERDRIVE ──
 function activateOverdrive(){
   if(!gameRunning||odGauge<100||odActive)return;
+  playSE('se_overdrive');
   odGauge=0;odActive=true;
   document.getElementById('od-overlay').classList.add('active');
   const ann=document.getElementById('od-announce');ann.classList.remove('show');void ann.offsetWidth;ann.classList.add('show');
@@ -891,12 +901,13 @@ let _bgmGain = null;        // BGM gain node
 const _seBuffers = {};      // pre-decoded SE buffers keyed by id
 const _seExclusive = {};    // tracks if exclusive SE is playing
 
-// SE files to pre-load (se_overdrive removed, se_swap removed)
+// SE files to pre-load (se_swap removed)
 const SE_FILES = {
   se_select:       'se_select.mp3',
   se_initialize:   'se_initialize.mp3',
   se_match:        'se_match.mp3',
   se_combo:        'se_combo.mp3',
+  se_overdrive:    'se_overdrive.mp3',
   se_virus:        'se_virus.mp3',
   se_virus_hit:    'se_virus_hit.mp3',
   se_bomb_explode: 'se_bomb_explode.mp3',
