@@ -488,6 +488,7 @@ function playIntro(onComplete){
     void elNoise.offsetWidth; void elGlitch.offsetWidth;
     elNoise.classList.add('show');
     elGlitch.classList.add('show');
+    playSE('se_initialize');
   }, 30);
 
   // Phase 2 (700ms): scan + board ghost
@@ -511,7 +512,11 @@ function playIntro(onComplete){
     void elFlash.offsetWidth;
     elFlash.classList.add('show');
     overlay.classList.add('hidden');
-    setTimeout(()=>{ elFlash.classList.remove('show'); onComplete(); }, 200);
+    setTimeout(()=>{
+      elFlash.classList.remove('show');
+      playBGM();   // BGM starts exactly when player gets control
+      onComplete();
+    }, 200);
   }, 2350);
 }
 
@@ -618,7 +623,7 @@ function updateHUD(){
 function onCellClick(r,c){
   if(!gameRunning)return;
   if(board[r][c].type==='corrupt')return;
-  if(!selectedCell){selectedCell=[r,c];renderBoard();return;}
+  if(!selectedCell){selectedCell=[r,c];renderBoard();playSE('se_select');return;}
   const[sr,sc]=selectedCell;
   if(sr===r&&sc===c){selectedCell=null;renderBoard();return;}
   if(Math.abs(sr-r)+Math.abs(sc-c)!==1){selectedCell=[r,c];renderBoard();return;}
@@ -629,6 +634,7 @@ function onCellClick(r,c){
 function doSwap(r1,c1,r2,c2){
   // swap always commits — no reversal on miss
   const tmp=board[r1][c1];board[r1][c1]=board[r2][c2];board[r2][c2]=tmp;
+  playSE('se_swap');
   renderBoard();
   setTimeout(()=>{
     const matches=findMatches();
@@ -688,7 +694,9 @@ function processMatches(matches){
   odGauge=Math.min(100,odGauge+matches.length*6+pu*20);
   if(bl>0)addError(-bl*5);if(gr>0)addError(-gr*8);if(re>0)score+=re*50*(odActive?2:1);
   updateRank();showScorePopup(gained);
-  if(combo>=3)showComboPopup(combo);
+  playSE('se_match');
+  if(combo>=2) playSE('se_combo');
+  if(combo>=3) showComboPopup(combo);
 
   const cells=document.getElementById('board').querySelectorAll('.panel');
   matches.forEach(([r,c])=>cells[r*COLS+c].classList.add('clearing'));
@@ -702,7 +710,7 @@ function processMatches(matches){
         if(nr<0||nr>=ROWS||nc<0||nc>=COLS)return;
         const nb=board[nr][nc];if(!nb)return;
         const key=nr*COLS+nc;
-        if(nb.type==='virus'&&!cs.has(key)&&!vd.has(key)){vd.add(key);nb.virusHits=(nb.virusHits||0)+1;}
+        if(nb.type==='virus'&&!cs.has(key)&&!vd.has(key)){vd.add(key);nb.virusHits=(nb.virusHits||0)+1;playSE('se_virus_hit');}
         if(nb.type==='corrupt'&&!cs.has(key))nb.corruptHp=(nb.corruptHp??3)-1;
       });
     });
@@ -746,7 +754,7 @@ function makeNewPanel(){
   if(gameVariant==='pure')return{type:'normal',color:COLORS[Math.floor(Math.random()*COLORS.length)]};
   const roll=Math.random();
   if(phase>=3&&roll<0.05)return{type:'bomb',color:'bomb',bombTimer:6,spawned:true};
-  if(phase>=2&&roll<0.09&&countVirus()<MAX_VIRUS)return{type:'virus',color:'virus',virusHits:0,spawned:true};
+  if(phase>=2&&roll<0.09&&countVirus()<MAX_VIRUS){setTimeout(()=>playSE('se_virus',0.5),50);return{type:'virus',color:'virus',virusHits:0,spawned:true};}
   if(phase>=3&&roll<0.12)return{type:'corrupt',color:'corrupt',corruptHp:3,spawned:true};
   return{type:'normal',color:COLORS[Math.floor(Math.random()*COLORS.length)]};
 }
@@ -765,7 +773,9 @@ function spreadVirus(){
     }
   }
   const budget=MAX_VIRUS-countVirus();
-  nv.slice(0,budget).forEach(([r,c])=>{board[r][c]={type:'virus',color:'virus',virusHits:0,spawned:true};});
+  const toSpread=nv.slice(0,budget);
+  toSpread.forEach(([r,c])=>{board[r][c]={type:'virus',color:'virus',virusHits:0,spawned:true};});
+  if(toSpread.length>0) playSE('se_virus',0.5);
 }
 
 function tickBombs(){
@@ -773,7 +783,7 @@ function tickBombs(){
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
     if(board[r][c]?.type==='bomb'){
       board[r][c].bombTimer=(board[r][c].bombTimer||5)-1;
-      if(board[r][c].bombTimer<=0){board[r][c]={type:'corrupt',color:'corrupt',corruptHp:3,spawned:true};addError(15);any=true;}
+      if(board[r][c].bombTimer<=0){board[r][c]={type:'corrupt',color:'corrupt',corruptHp:3,spawned:true};addError(15);any=true;playSE('se_bomb_explode');}
     }
   }
   if(any){renderBoard();shakeBoard();}
@@ -788,6 +798,7 @@ function activateOverdrive(){
   odGauge=0;odActive=true;
   document.getElementById('od-overlay').classList.add('active');
   const ann=document.getElementById('od-announce');ann.classList.remove('show');void ann.offsetWidth;ann.classList.add('show');
+  playSE('se_overdrive');
   if(odTimer)clearTimeout(odTimer);
   odTimer=setTimeout(()=>{odActive=false;document.getElementById('od-overlay').classList.remove('active');updateHUD();},10000);
   updateHUD();
@@ -812,7 +823,7 @@ function updatePhase(){
 
 function addBombAndVirus(){
   if(phase>=3)for(let i=0;i<2;i++){const r=Math.floor(Math.random()*(ROWS-2))+1,c=Math.floor(Math.random()*COLS);if(board[r][c]?.type==='normal')board[r][c]={type:'bomb',color:'bomb',bombTimer:5,spawned:true};}
-  if(phase>=2&&countVirus()<MAX_VIRUS){const r=Math.floor(Math.random()*(ROWS-2))+1,c=Math.floor(Math.random()*COLS);if(board[r][c]?.type==='normal')board[r][c]={type:'virus',color:'virus',virusHits:0,spawned:true};}
+  if(phase>=2&&countVirus()<MAX_VIRUS){const r=Math.floor(Math.random()*(ROWS-2))+1,c=Math.floor(Math.random()*COLS);if(board[r][c]?.type==='normal'){board[r][c]={type:'virus',color:'virus',virusHits:0,spawned:true};playSE('se_virus');}}
   renderBoard();
 }
 
@@ -846,6 +857,8 @@ function endGame(){
   document.getElementById('od-overlay').classList.remove('active');
   document.getElementById('danger-overlay').classList.remove('show');
   document.getElementById('nomatch-overlay').classList.remove('warn');
+  stopBGM();
+  setTimeout(()=>playSE('se_gameover'), 100);
 
   highScores.push({score,mode:gameMode,variant:gameVariant});
   highScores.sort((a,b)=>b.score-a.score);
@@ -866,6 +879,35 @@ function endGame(){
 
 function restartGame(){document.getElementById('gameover-screen').classList.remove('show');startGame(gameMode,gameVariant);}
 function goToTitle(){document.getElementById('gameover-screen').classList.remove('show');document.getElementById('game-wrapper').style.display='none';document.getElementById('title-screen').style.display='flex';renderTitleHS();}
+
+// ============================================================
+// AUDIO ENGINE
+// ============================================================
+const BGM_VOL = 0.5;
+const SE_VOL  = 0.8;
+
+function playBGM() {
+  const bgm = document.getElementById('bgm');
+  if (!bgm) return;
+  bgm.volume = BGM_VOL;
+  bgm.currentTime = 0;
+  bgm.play().catch(() => {});
+}
+
+function stopBGM() {
+  const bgm = document.getElementById('bgm');
+  if (!bgm) return;
+  bgm.pause();
+  bgm.currentTime = 0;
+}
+
+function playSE(id, volumeOverride) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.volume = volumeOverride !== undefined ? volumeOverride : SE_VOL;
+  el.currentTime = 0;
+  el.play().catch(() => {});
+}
 </script>
 
 <!-- INTRO SEQUENCE -->
@@ -885,5 +927,18 @@ function goToTitle(){document.getElementById('gameover-screen').classList.remove
   <div id="intro-jackin">JACK IN</div>
 </div>
 <div id="intro-flash"></div>
+
+<!-- AUDIO -->
+<audio id="bgm"              src="bgm_game.mp3"       loop preload="auto"></audio>
+<audio id="se_select"        src="se_select.mp3"            preload="auto"></audio>
+<audio id="se_initialize"    src="se_initialize.mp3"        preload="auto"></audio>
+<audio id="se_match"         src="se_match.mp3"             preload="auto"></audio>
+<audio id="se_combo"         src="se_combo.mp3"             preload="auto"></audio>
+<audio id="se_swap"          src="se_swap.mp3"              preload="auto"></audio>
+<audio id="se_overdrive"     src="se_overdrive.mp3"         preload="auto"></audio>
+<audio id="se_virus"         src="se_virus.mp3"             preload="auto"></audio>
+<audio id="se_virus_hit"     src="se_virus_hit.mp3"         preload="auto"></audio>
+<audio id="se_bomb_explode"  src="se_bomb_explode.mp3"      preload="auto"></audio>
+<audio id="se_gameover"      src="se_gameover.mp3"          preload="auto"></audio>
 </body>
 </html>
