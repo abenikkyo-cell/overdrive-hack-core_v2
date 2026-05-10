@@ -16,6 +16,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow:hidden;user-select:none;}
+body::after{content:'';position:fixed;inset:0;background:url('BG1.png') center center / cover no-repeat;opacity:0.18;pointer-events:none;z-index:0;}
 body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,245,255,.015) 2px,rgba(0,245,255,.015) 4px),repeating-linear-gradient(90deg,transparent,transparent 2px,rgba(0,245,255,.01) 2px,rgba(0,245,255,.01) 4px);pointer-events:none;z-index:0;}
 
 /* TITLE */
@@ -117,7 +118,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .panel.p-corrupt.gimmick-spawn{filter:brightness(6);box-shadow:0 0 20px #aaaaaa,0 0 40px #ffffff;}
 .corrupt-hp{font-size:9px;color:#ff4444;font-weight:bold;letter-spacing:-1px;}
 .panel.clearing{
-  animation:plasma-core .35s forwards;
+  animation:plasma-core .25s forwards;
   z-index:20;
   position:relative;
 }
@@ -126,9 +127,9 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   position:absolute;
   inset:-6px;
   border-radius:50%;
-  border:3px solid currentColor;
+  border:2px solid currentColor;
   opacity:0;
-  animation:plasma-ring .35s forwards;
+  animation:plasma-ring .25s forwards;
   pointer-events:none;
   z-index:21;
 }
@@ -137,36 +138,36 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   position:absolute;
   inset:-2px;
   border-radius:6px;
-  background:radial-gradient(circle,rgba(255,255,255,1) 0%,rgba(255,255,255,.6) 30%,transparent 70%);
+  background:radial-gradient(circle,rgba(255,255,255,.55) 0%,rgba(255,255,255,.2) 35%,transparent 70%);
   opacity:0;
-  animation:plasma-flash .35s forwards;
+  animation:plasma-flash .25s forwards;
   pointer-events:none;
   z-index:22;
 }
 
-/* core panel */
+/* core panel — brightness抑えめ */
 @keyframes plasma-core{
   0%  {transform:scale(1);    opacity:1; filter:brightness(1);}
-  20% {transform:scale(1.25); opacity:1; filter:brightness(5) saturate(3);}
-  45% {transform:scale(1.5);  opacity:.7;filter:brightness(8) saturate(4) hue-rotate(30deg);}
-  70% {transform:scale(0.8);  opacity:.3;filter:brightness(4);}
+  20% {transform:scale(1.2);  opacity:.9;filter:brightness(2.5) saturate(2);}
+  45% {transform:scale(1.35); opacity:.6;filter:brightness(3.5) saturate(2.5) hue-rotate(20deg);}
+  70% {transform:scale(0.85); opacity:.25;filter:brightness(2);}
   100%{transform:scale(0);    opacity:0; filter:brightness(1);}
 }
 
-/* expanding ring */
+/* expanding ring — 控えめに */
 @keyframes plasma-ring{
-  0%  {inset:-2px; opacity:0;  border-width:4px; filter:brightness(1);}
-  15% {inset:-4px; opacity:1;  border-width:3px; filter:brightness(4);}
-  50% {inset:-14px;opacity:.8; border-width:2px; filter:brightness(3);}
-  100%{inset:-28px;opacity:0;  border-width:1px; filter:brightness(1);}
+  0%  {inset:-2px; opacity:0;   border-width:3px; filter:brightness(1);}
+  15% {inset:-4px; opacity:.7;  border-width:2px; filter:brightness(2.5);}
+  50% {inset:-12px;opacity:.5;  border-width:1px; filter:brightness(2);}
+  100%{inset:-22px;opacity:0;   border-width:1px; filter:brightness(1);}
 }
 
-/* white hot flash */
+/* white hot flash — 透明度大幅に下げる */
 @keyframes plasma-flash{
-  0%  {opacity:0;  transform:scale(0.5);}
-  20% {opacity:1;  transform:scale(1.2);}
-  50% {opacity:.6; transform:scale(1.6);}
-  100%{opacity:0;  transform:scale(2.2);}
+  0%  {opacity:0;   transform:scale(0.5);}
+  20% {opacity:.45; transform:scale(1.1);}
+  50% {opacity:.25; transform:scale(1.5);}
+  100%{opacity:0;   transform:scale(2.0);}
 }
 .bomb-timer{position:absolute;top:2px;right:3px;font-size:9px;color:var(--overdrive);font-weight:bold;font-family:'Orbitron',sans-serif;}
 
@@ -424,13 +425,93 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   border-radius:50%;
   pointer-events:none;
   z-index:300;
-  animation:spark-fly .5s ease-out forwards;
+  animation:spark-fly .4s ease-out forwards;
 }
 @keyframes spark-fly{
   0%  {opacity:1;transform:translate(0,0) scale(1);}
   60% {opacity:.8;}
   100%{opacity:0;transform:translate(var(--sx),var(--sy)) scale(0);}
-}</style>
+}
+/* OVERDRIVE board glow — corner/edge beams on the background */
+#od-board-glow{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:2;
+  opacity:0;
+  transition:opacity .5s ease;
+}
+#od-board-glow.active{
+  opacity:1;
+}
+/* Top edge */
+#od-board-glow::before{
+  content:'';
+  position:absolute;
+  left:8%;right:8%;
+  top:0;height:3px;
+  background:linear-gradient(90deg,transparent,rgba(255,140,0,.9),rgba(255,200,0,1),rgba(255,140,0,.9),transparent);
+  box-shadow:0 0 12px 4px rgba(255,120,0,.7), 0 0 30px 8px rgba(255,102,0,.4);
+  animation:od-edge-pulse .7s infinite alternate;
+  border-radius:2px;
+}
+/* Bottom edge */
+#od-board-glow::after{
+  content:'';
+  position:absolute;
+  left:8%;right:8%;
+  bottom:0;height:3px;
+  background:linear-gradient(90deg,transparent,rgba(255,140,0,.9),rgba(255,200,0,1),rgba(255,140,0,.9),transparent);
+  box-shadow:0 0 12px 4px rgba(255,120,0,.7), 0 0 30px 8px rgba(255,102,0,.4);
+  animation:od-edge-pulse .7s infinite alternate;
+  border-radius:2px;
+}
+/* Left edge */
+.od-edge-left{
+  position:absolute;
+  top:8%;bottom:8%;
+  left:0;width:3px;
+  background:linear-gradient(180deg,transparent,rgba(255,140,0,.9),rgba(255,200,0,1),rgba(255,140,0,.9),transparent);
+  box-shadow:0 0 12px 4px rgba(255,120,0,.7), 0 0 30px 8px rgba(255,102,0,.4);
+  animation:od-edge-pulse .7s infinite alternate;
+  border-radius:2px;
+  pointer-events:none;
+}
+/* Right edge */
+.od-edge-right{
+  position:absolute;
+  top:8%;bottom:8%;
+  right:0;width:3px;
+  background:linear-gradient(180deg,transparent,rgba(255,140,0,.9),rgba(255,200,0,1),rgba(255,140,0,.9),transparent);
+  box-shadow:0 0 12px 4px rgba(255,120,0,.7), 0 0 30px 8px rgba(255,102,0,.4);
+  animation:od-edge-pulse .7s infinite alternate;
+  border-radius:2px;
+  pointer-events:none;
+}
+/* Corner dots */
+.od-corner{
+  position:absolute;
+  width:8px;height:8px;
+  background:#fff;
+  border-radius:50%;
+  box-shadow:0 0 8px 3px rgba(255,160,0,.9),0 0 20px 6px rgba(255,102,0,.6);
+  animation:od-corner-pulse .7s infinite alternate;
+  pointer-events:none;
+}
+.od-corner.tl{top:2px;left:2px;}
+.od-corner.tr{top:2px;right:2px;}
+.od-corner.bl{bottom:2px;left:2px;}
+.od-corner.br{bottom:2px;right:2px;}
+
+@keyframes od-edge-pulse{
+  from{opacity:.7;box-shadow:0 0 10px 3px rgba(255,120,0,.6),0 0 24px 6px rgba(255,102,0,.3);}
+  to  {opacity:1; box-shadow:0 0 18px 6px rgba(255,160,0,.9),0 0 40px 12px rgba(255,102,0,.5);}
+}
+@keyframes od-corner-pulse{
+  from{transform:scale(0.8);box-shadow:0 0 6px 2px rgba(255,160,0,.8),0 0 14px 4px rgba(255,102,0,.5);}
+  to  {transform:scale(1.2);box-shadow:0 0 12px 4px rgba(255,200,0,1),  0 0 28px 8px rgba(255,102,0,.7);}
+}
+</style>
 </head>
 <body>
 
@@ -471,7 +552,10 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
     </div>
     <div class="phase-label" id="phase-name-disp">PHASE 1</div>
   </div>
-  <div id="board-container"><div id="board"></div></div>
+  <div id="board-container">
+    <div id="od-board-glow"><div class="od-edge-left"></div><div class="od-edge-right"></div><div class="od-corner tl"></div><div class="od-corner tr"></div><div class="od-corner bl"></div><div class="od-corner br"></div></div>
+    <div id="board"></div>
+  </div>
 </div>
 
 <div id="kb-hint">[ ↑↓←→ ] MOVE &nbsp; [ SPACE ] SELECT &nbsp; [ SELECT + ↑↓←→ ] SWAP</div>
@@ -720,6 +804,7 @@ function updateHUD(){
   document.getElementById('od-btn').classList.toggle('ready',odGauge>=100&&!odActive);
   document.getElementById('score-disp').classList.toggle('od-active',odActive);
   document.getElementById('hud-score-box').classList.toggle('od-active',odActive);
+  document.getElementById('od-board-glow').classList.toggle('active',odActive);
   const re=document.getElementById('rank-disp');re.textContent=currentRank;re.className='rank-badge rank-'+currentRank;
   document.getElementById('combo-disp').textContent=combo>1?combo+'x COMBO':'';
   if(gameVariant!=='pure'){
@@ -849,7 +934,7 @@ function processMatches(matches){
     const chain=findMatches();
     if(chain.length>0){resetNoMatchTimer();processMatches(chain);}
     else{const comboDelay=2500+gr*1500;comboTimer=setTimeout(()=>{if(combo>0){addError(combo>5?5:2);combo=0;updateHUD();}},comboDelay);updateHUD();}
-  },300);
+  },250);
 }
 
 function clearComboTimer(){if(comboTimer){clearTimeout(comboTimer);comboTimer=null;}}
