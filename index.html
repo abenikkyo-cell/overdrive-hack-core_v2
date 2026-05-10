@@ -116,7 +116,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 /* corrupt spawn: white flash */
 .panel.p-corrupt.gimmick-spawn{filter:brightness(6);box-shadow:0 0 20px #aaaaaa,0 0 40px #ffffff;}
 .corrupt-hp{font-size:9px;color:#ff4444;font-weight:bold;letter-spacing:-1px;}
-.panel.clearing{animation:clearflash .35s forwards;}
+.panel.clearing{animation:clearflash .2s forwards;}
 @keyframes clearflash{0%{transform:scale(1);opacity:1;}50%{transform:scale(1.45);opacity:.8;filter:brightness(3);}100%{transform:scale(0);opacity:0;}}
 .bomb-timer{position:absolute;top:2px;right:3px;font-size:9px;color:var(--overdrive);font-weight:bold;font-family:'Orbitron',sans-serif;}
 
@@ -644,7 +644,7 @@ function doSwap(r1,c1,r2,c2){
       resetNoMatchTimer();
       processMatches(matches);
     }
-  },120);
+  },80);
 }
 
 // ── MATCH FINDING ──
@@ -732,8 +732,8 @@ function processMatches(matches){
       const chain=findMatches();
       if(chain.length>0){resetNoMatchTimer();processMatches(chain);}
       else{const comboDelay=2500+gr*1500;comboTimer=setTimeout(()=>{if(combo>0){addError(combo>5?5:2);combo=0;updateHUD();}},comboDelay);updateHUD();}
-    },150);
-  },350);
+    },100);
+  },200);
 }
 
 function clearComboTimer(){if(comboTimer){clearTimeout(comboTimer);comboTimer=null;}}
@@ -795,10 +795,10 @@ function tickBombs(){
 // ── OVERDRIVE ──
 function activateOverdrive(){
   if(!gameRunning||odGauge<100||odActive)return;
+  playSE('se_overdrive');  // fire immediately before any DOM ops
   odGauge=0;odActive=true;
   document.getElementById('od-overlay').classList.add('active');
   const ann=document.getElementById('od-announce');ann.classList.remove('show');void ann.offsetWidth;ann.classList.add('show');
-  playSE('se_overdrive');
   if(odTimer)clearTimeout(odTimer);
   odTimer=setTimeout(()=>{odActive=false;document.getElementById('od-overlay').classList.remove('active');updateHUD();},10000);
   updateHUD();
@@ -901,12 +901,17 @@ function stopBGM() {
   bgm.currentTime = 0;
 }
 
+// Clone-based SE: each call creates a fresh Audio clone so sounds never
+// interrupt each other and can overlap freely.
 function playSE(id, volumeOverride) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.volume = volumeOverride !== undefined ? volumeOverride : SE_VOL;
-  el.currentTime = 0;
-  el.play().catch(() => {});
+  const src = document.getElementById(id);
+  if (!src) return;
+  const clone = src.cloneNode();
+  clone.volume = volumeOverride !== undefined ? volumeOverride : SE_VOL;
+  clone.play().catch(() => {});
+  // auto-clean after playback
+  clone.addEventListener('ended', () => clone.remove(), { once: true });
+  document.body.appendChild(clone);
 }
 </script>
 
