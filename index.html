@@ -90,11 +90,11 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .panel:hover{transform:scale(1.07);}
 .panel.selected{border-color:#fff!important;box-shadow:0 0 0 2px #fff,0 0 18px #fff,0 0 36px rgba(255,255,255,.5)!important;transform:scale(1.13)!important;z-index:10;animation:selectedpulse .4s infinite alternate;}
 @keyframes selectedpulse{from{box-shadow:0 0 0 2px #fff,0 0 14px #fff,0 0 28px rgba(255,255,255,.4);}to{box-shadow:0 0 0 3px #fff,0 0 24px #fff,0 0 48px rgba(255,255,255,.6);}}
-.panel.p-red{background:rgba(255,51,68,.28);border-color:rgba(255,51,68,.55);box-shadow:inset 0 0 10px rgba(255,51,68,.3);}
-.panel.p-blue{background:rgba(0,136,255,.28);border-color:rgba(0,136,255,.55);box-shadow:inset 0 0 10px rgba(0,136,255,.3);}
-.panel.p-yellow{background:rgba(255,221,0,.22);border-color:rgba(255,221,0,.45);box-shadow:inset 0 0 10px rgba(255,221,0,.25);}
-.panel.p-purple{background:rgba(204,68,255,.28);border-color:rgba(204,68,255,.55);box-shadow:inset 0 0 10px rgba(204,68,255,.3);}
-.panel.p-green{background:rgba(0,238,102,.22);border-color:rgba(0,238,102,.45);box-shadow:inset 0 0 10px rgba(0,238,102,.25);}
+.panel.p-red{background:rgba(255,51,68,.28);border-color:rgba(255,51,68,.55);box-shadow:inset 0 0 10px rgba(255,51,68,.3);color:var(--panel-red);}
+.panel.p-blue{background:rgba(0,136,255,.28);border-color:rgba(0,136,255,.55);box-shadow:inset 0 0 10px rgba(0,136,255,.3);color:var(--panel-blue);}
+.panel.p-yellow{background:rgba(255,221,0,.22);border-color:rgba(255,221,0,.45);box-shadow:inset 0 0 10px rgba(255,221,0,.25);color:var(--panel-yellow);}
+.panel.p-purple{background:rgba(204,68,255,.28);border-color:rgba(204,68,255,.55);box-shadow:inset 0 0 10px rgba(204,68,255,.3);color:var(--panel-purple);}
+.panel.p-green{background:rgba(0,238,102,.22);border-color:rgba(0,238,102,.45);box-shadow:inset 0 0 10px rgba(0,238,102,.25);color:var(--panel-green);}
 .panel.p-virus{background:rgba(80,20,20,.7);border-color:#550000;animation:virusblink 1.5s infinite;}
 @keyframes virusblink{50%{border-color:#ff0000;box-shadow:0 0 10px #ff0000;}}
 .panel.p-bomb{background:rgba(255,100,0,.3);border-color:var(--overdrive);animation:bombblink .8s infinite;}
@@ -116,8 +116,58 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 /* corrupt spawn: white flash */
 .panel.p-corrupt.gimmick-spawn{filter:brightness(6);box-shadow:0 0 20px #aaaaaa,0 0 40px #ffffff;}
 .corrupt-hp{font-size:9px;color:#ff4444;font-weight:bold;letter-spacing:-1px;}
-.panel.clearing{animation:clearflash .2s forwards;}
-@keyframes clearflash{0%{transform:scale(1);opacity:1;}50%{transform:scale(1.45);opacity:.8;filter:brightness(3);}100%{transform:scale(0);opacity:0;}}
+.panel.clearing{
+  animation:plasma-core .35s forwards;
+  z-index:20;
+  position:relative;
+}
+.panel.clearing::before{
+  content:'';
+  position:absolute;
+  inset:-6px;
+  border-radius:50%;
+  border:3px solid currentColor;
+  opacity:0;
+  animation:plasma-ring .35s forwards;
+  pointer-events:none;
+  z-index:21;
+}
+.panel.clearing::after{
+  content:'';
+  position:absolute;
+  inset:-2px;
+  border-radius:6px;
+  background:radial-gradient(circle,rgba(255,255,255,1) 0%,rgba(255,255,255,.6) 30%,transparent 70%);
+  opacity:0;
+  animation:plasma-flash .35s forwards;
+  pointer-events:none;
+  z-index:22;
+}
+
+/* core panel */
+@keyframes plasma-core{
+  0%  {transform:scale(1);    opacity:1; filter:brightness(1);}
+  20% {transform:scale(1.25); opacity:1; filter:brightness(5) saturate(3);}
+  45% {transform:scale(1.5);  opacity:.7;filter:brightness(8) saturate(4) hue-rotate(30deg);}
+  70% {transform:scale(0.8);  opacity:.3;filter:brightness(4);}
+  100%{transform:scale(0);    opacity:0; filter:brightness(1);}
+}
+
+/* expanding ring */
+@keyframes plasma-ring{
+  0%  {inset:-2px; opacity:0;  border-width:4px; filter:brightness(1);}
+  15% {inset:-4px; opacity:1;  border-width:3px; filter:brightness(4);}
+  50% {inset:-14px;opacity:.8; border-width:2px; filter:brightness(3);}
+  100%{inset:-28px;opacity:0;  border-width:1px; filter:brightness(1);}
+}
+
+/* white hot flash */
+@keyframes plasma-flash{
+  0%  {opacity:0;  transform:scale(0.5);}
+  20% {opacity:1;  transform:scale(1.2);}
+  50% {opacity:.6; transform:scale(1.6);}
+  100%{opacity:0;  transform:scale(2.2);}
+}
 .bomb-timer{position:absolute;top:2px;right:3px;font-size:9px;color:var(--overdrive);font-weight:bold;font-family:'Orbitron',sans-serif;}
 
 /* SKILL BAR */
@@ -334,7 +384,53 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   0%  {opacity:0.5;}
   100%{opacity:0;}
 }
-</style>
+
+/* ===== PC KEYBOARD CURSOR ===== */
+.panel.kb-cursor {
+  outline: 3px solid var(--neon-cyan) !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px var(--neon-cyan),
+              0 0 14px var(--neon-cyan),
+              0 0 28px rgba(0,245,255,0.4) !important;
+  animation: cursorblink .6s infinite alternate !important;
+  z-index: 5;
+}
+.panel.kb-cursor.selected {
+  outline-color: #fff !important;
+  box-shadow: 0 0 0 3px #fff,
+              0 0 18px #fff,
+              0 0 36px rgba(255,255,255,.5) !important;
+  animation: selectedpulse .4s infinite alternate !important;
+}
+@keyframes cursorblink {
+  from { outline-color: var(--neon-cyan); box-shadow: 0 0 0 3px var(--neon-cyan), 0 0 10px var(--neon-cyan); }
+  to   { outline-color: rgba(0,245,255,.5); box-shadow: 0 0 0 3px rgba(0,245,255,.4), 0 0 22px rgba(0,245,255,.6); }
+}
+
+/* KB mode hint */
+#kb-hint {
+  position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; color: var(--dim); letter-spacing: 2px;
+  pointer-events: none; z-index: 10;
+  opacity: 0; transition: opacity .5s;
+}
+#kb-hint.show { opacity: 1; }
+
+/* plasma sparks */
+.plasma-spark{
+  position:fixed;
+  width:5px;height:5px;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:300;
+  animation:spark-fly .5s ease-out forwards;
+}
+@keyframes spark-fly{
+  0%  {opacity:1;transform:translate(0,0) scale(1);}
+  60% {opacity:.8;}
+  100%{opacity:0;transform:translate(var(--sx),var(--sy)) scale(0);}
+}</style>
 </head>
 <body>
 
@@ -378,6 +474,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   <div id="board-container"><div id="board"></div></div>
 </div>
 
+<div id="kb-hint">[ ↑↓←→ ] MOVE &nbsp; [ SPACE ] SELECT &nbsp; [ SELECT + ↑↓←→ ] SWAP</div>
 <div id="od-overlay"></div>
 <div id="danger-overlay"></div>
 <div id="nomatch-overlay"></div>
@@ -406,6 +503,8 @@ const COLOR_EMOJI={red:'🔴',blue:'🔵',yellow:'🟡',purple:'🟣',green:'�
 const COLOR_CLASS={red:'p-red',blue:'p-blue',yellow:'p-yellow',purple:'p-purple',green:'p-green',virus:'p-virus',bomb:'p-bomb',corrupt:'p-corrupt'};
 
 let board=[],selectedCell=null,score=0,combo=0,comboTimer=null;
+let kbCursor=[0,0];   // [row, col] of keyboard cursor
+let kbMode=false;     // true = keyboard control active
 let timeLeft=90,gameMode=90,gameVariant='normal',gameRunning=false,gameTimer=null;
 let phase=1,errorRate=0,odGauge=0;
 let odActive=false,odTimer=null;
@@ -429,6 +528,7 @@ function startGame(mode,variant){
   score=combo=errorRate=odGauge=noMatchSeconds=0;
   odActive=false;phase=1;
   selectedCell=null;recordBroken=false;currentRank='NORMAL';
+  kbCursor=[0,0];kbMode=false;
   prevHighScore=getTop3()[0]?.score||0;
 
   initAudio();  // create AudioContext on user gesture + pre-load SE buffers
@@ -600,9 +700,10 @@ function renderBoard(){
         const hp=document.createElement('div');hp.className='bomb-timer corrupt-hp';hp.textContent='♦'.repeat(cell.corruptHp??3);div.appendChild(hp);
       }
       if(selectedCell&&selectedCell[0]===r&&selectedCell[1]===c)div.classList.add('selected');
+      if(kbMode&&kbCursor[0]===r&&kbCursor[1]===c)div.classList.add('kb-cursor');
       // spawn flash for new gimmick panels
       if(cell.spawned){div.classList.add('gimmick-spawn');cell.spawned=false;}
-      div.addEventListener('click',()=>onCellClick(r,c));
+      div.addEventListener('click',()=>{ kbMode=false; updateKbHint(); onCellClick(r,c); });
       el.appendChild(div);
     }
   }
@@ -708,7 +809,13 @@ function processMatches(matches){
   if(combo>=3) showComboPopup(combo);
 
   const cells=document.getElementById('board').querySelectorAll('.panel');
-  matches.forEach(([r,c])=>cells[r*COLS+c].classList.add('clearing'));
+  const sparkColors={red:'#ff3344',blue:'#0088ff',yellow:'#ffdd00',purple:'#cc44ff',green:'#00ee66'};
+  matches.forEach(([r,c])=>{
+    const idx=r*COLS+c;
+    cells[idx].classList.add('clearing');
+    const col=board[r][c]?.color;
+    if(sparkColors[col]) spawnSparks(cells[idx], sparkColors[col]);
+  });
 
   if(gameVariant!=='pure'){
     const cs=new Set(matches.map(([r,c])=>r*COLS+c));
@@ -742,7 +849,7 @@ function processMatches(matches){
     const chain=findMatches();
     if(chain.length>0){resetNoMatchTimer();processMatches(chain);}
     else{const comboDelay=2500+gr*1500;comboTimer=setTimeout(()=>{if(combo>0){addError(combo>5?5:2);combo=0;updateHUD();}},comboDelay);updateHUD();}
-  },200);
+  },300);
 }
 
 function clearComboTimer(){if(comboTimer){clearTimeout(comboTimer);comboTimer=null;}}
@@ -856,6 +963,82 @@ function showScorePopup(val){const p=document.createElement('div');p.className='
 function showNewRecord(){const el=document.getElementById('new-record-flash');el.classList.remove('show');void el.offsetWidth;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2000);}
 function shakeBoard(){const bc=document.getElementById('board-container');bc.classList.remove('shaking');void bc.offsetWidth;bc.classList.add('shaking');}
 
+
+// ============================================================
+// KEYBOARD CONTROL
+// ============================================================
+function updateKbHint() {
+  document.getElementById('kb-hint').classList.toggle('show', kbMode);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (!gameRunning) return;
+  const key = e.code;
+  if (!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(key)) return;
+  e.preventDefault();
+
+  if (!kbMode) { kbMode = true; updateKbHint(); }
+
+  const [r, c] = kbCursor;
+
+  if (key === 'Space') {
+    // Select / deselect current cursor cell
+    if (board[r][c]?.type === 'corrupt') return;
+    if (selectedCell && selectedCell[0] === r && selectedCell[1] === c) {
+      // deselect
+      selectedCell = null;
+    } else {
+      selectedCell = [r, c];
+      playSE('se_select');
+    }
+    renderBoard();
+    return;
+  }
+
+  // Arrow key: move cursor, and if a panel is selected → swap in that direction
+  let nr = r, nc = c;
+  if (key === 'ArrowUp')    nr = Math.max(0, r - 1);
+  if (key === 'ArrowDown')  nr = Math.min(ROWS - 1, r + 1);
+  if (key === 'ArrowLeft')  nc = Math.max(0, c - 1);
+  if (key === 'ArrowRight') nc = Math.min(COLS - 1, c + 1);
+
+  if (selectedCell && selectedCell[0] === r && selectedCell[1] === c) {
+    // Panel is selected → swap toward arrow direction then deselect
+    selectedCell = null;
+    kbCursor = [nr, nc];
+    doSwap(r, c, nr, nc);
+  } else {
+    // No selection → just move cursor
+    kbCursor = [nr, nc];
+    renderBoard();
+  }
+});
+
+// plasma spark burst on panel clear
+function spawnSparks(cellEl, color) {
+  if (!cellEl) return;
+  const rect = cellEl.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top  + rect.height / 2;
+  const count = 7;
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2 + Math.random() * 0.5;
+    const dist  = 28 + Math.random() * 28;
+    const s = document.createElement('div');
+    s.className = 'plasma-spark';
+    s.style.cssText = [
+      `left:${cx - 2}px`,
+      `top:${cy - 2}px`,
+      `background:${color}`,
+      `box-shadow:0 0 6px ${color},0 0 12px ${color}`,
+      `--sx:${Math.cos(angle)*dist}px`,
+      `--sy:${Math.sin(angle)*dist}px`,
+      `animation-delay:${Math.random()*0.06}s`,
+    ].join(';');
+    document.body.appendChild(s);
+    s.addEventListener('animationend', () => s.remove(), { once: true });
+  }
+}
 // ── END GAME ──
 function endGame(){
   if(!gameRunning)return;
