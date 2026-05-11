@@ -509,6 +509,55 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   from{transform:scale(0.8);box-shadow:0 0 6px 2px rgba(0,232,160,.8),0 0 14px 4px rgba(0,200,130,.5);}
   to  {transform:scale(1.2);box-shadow:0 0 12px 4px rgba(0,255,200,1),  0 0 28px 8px rgba(0,232,160,.7);}
 }
+
+/* ===== OVERDRIVE CLEAR EFFECT ===== */
+/* OD中はエメラルド色の強化版プラズマ */
+.panel.clearing.od-clearing{
+  animation:od-plasma-core .25s forwards !important;
+}
+.panel.clearing.od-clearing::before{
+  border-color:#00e8a0 !important;
+  animation:od-plasma-ring .25s forwards !important;
+}
+.panel.clearing.od-clearing::after{
+  background:radial-gradient(circle,rgba(0,255,180,.7) 0%,rgba(0,232,160,.3) 35%,transparent 70%) !important;
+  animation:od-plasma-flash .25s forwards !important;
+}
+
+@keyframes od-plasma-core{
+  0%  {transform:scale(1);    opacity:1; filter:brightness(1);}
+  15% {transform:scale(1.3);  opacity:1; filter:brightness(4) saturate(3) hue-rotate(-30deg);}
+  40% {transform:scale(1.5);  opacity:.8;filter:brightness(6) saturate(4) hue-rotate(-20deg);}
+  70% {transform:scale(0.9);  opacity:.3;filter:brightness(3);}
+  100%{transform:scale(0);    opacity:0; filter:brightness(1);}
+}
+@keyframes od-plasma-ring{
+  0%  {inset:-2px; opacity:0;  border-width:3px;}
+  15% {inset:-6px; opacity:1;  border-width:2px; filter:brightness(3);}
+  55% {inset:-18px;opacity:.7; border-width:1px; filter:brightness(2);}
+  100%{inset:-30px;opacity:0;  border-width:1px;}
+}
+@keyframes od-plasma-flash{
+  0%  {opacity:0;   transform:scale(0.5);}
+  20% {opacity:.7;  transform:scale(1.2);}
+  55% {opacity:.4;  transform:scale(1.8);}
+  100%{opacity:0;   transform:scale(2.5);}
+}
+
+/* OD spark (別色) */
+.od-plasma-spark{
+  position:fixed;
+  width:6px;height:6px;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:300;
+  animation:od-spark-fly .45s ease-out forwards;
+}
+@keyframes od-spark-fly{
+  0%  {opacity:1;transform:translate(0,0) scale(1);}
+  60% {opacity:.8;}
+  100%{opacity:0;transform:translate(var(--sx),var(--sy)) scale(0);}
+}
 </style>
 </head>
 <body>
@@ -520,7 +569,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
     <button class="mode-btn m30"   onclick="startGame(30,'normal')">SPEED RUN<span class="mode-time">30 SECONDS — PHASE 3 START</span></button>
     <button class="mode-btn"       onclick="startGame(90,'normal')">STANDARD<span class="mode-time">90 SECONDS — NORMAL MODE</span></button>
     <button class="mode-btn mpure" onclick="startGame(90,'pure')">PURE MODE<span class="mode-time">90 SECONDS — NO GIMMICKS</span></button>
-    <button class="mode-btn m180"  onclick="startGame(180,'normal')">DEEP HACK<span class="mode-time">3 MINUTES — MAX SCORE HUNT</span></button>
+    <button class="mode-btn m180"  onclick="startGame(180,'normal')">DEEP HACK<span class="mode-time">∞ — ENDLESS SCORE HUNT</span></button>
   </div>
   <div class="high-scores-title">— HIGH SCORES —</div>
   <div id="title-hs-list"></div>
@@ -606,7 +655,8 @@ function modeLabel(m,v){const t=m===30?'30SEC':m===90?'90SEC':'3MIN';return v===
 renderTitleHS();
 
 function startGame(mode,variant){
-  gameMode=mode;gameVariant=variant||'normal';timeLeft=mode;
+  gameMode=mode;gameVariant=variant||'normal';
+  timeLeft=(mode===180)?Infinity:mode;
   score=combo=errorRate=odGauge=noMatchSeconds=phaseProgress=0;
   odActive=false;
   phase=(gameMode===30&&gameVariant==='normal')?3:1;
@@ -739,11 +789,12 @@ function updateNoMatchBar(){
 
 // ── GAME TICK ──
 // Phase progress rates: seconds to fill 100% per phase
-const PHASE_RATES={1:15,2:10,3:7,4:5};
+const PHASE_RATES={1:15,2:12,3:9,4:7};
 
 function gameTick(){
   if(!gameRunning)return;
-  timeLeft--;updateHUD();
+  if(timeLeft!==Infinity)timeLeft--;
+  updateHUD();
   if(timeLeft<=0){endGame();return;}
 
   // ERROR RATE: fills based on phase speed (% per second)
@@ -812,8 +863,8 @@ function renderBoard(){
 
 function updateHUD(){
   document.getElementById('score-disp').textContent=score.toLocaleString();
-  document.getElementById('time-disp').textContent=timeLeft;
-  document.getElementById('time-disp').classList.toggle('danger',timeLeft<=10);
+  document.getElementById('time-disp').textContent=timeLeft===Infinity?'∞':timeLeft;
+  document.getElementById('time-disp').classList.toggle('danger',timeLeft!==Infinity&&timeLeft<=10);
   // phase-progress gauge (red meter)
   document.getElementById('error-fill').style.width=Math.min(phaseProgress,100)+'%';
   document.getElementById('error-track').classList.toggle('danger',phaseProgress>=75);
@@ -905,8 +956,8 @@ function processMatches(matches){
   combo++;clearComboTimer();
   const gained=Math.floor(matches.length*100*(1+(( odActive?combo*2:combo)-1)*.5)*(odActive?2:1));
   score+=gained;
-  let pu=0,gr=0,re=0,bl=0;
-  matches.forEach(([r,c])=>{const col=board[r][c].color;if(col==='purple')pu++;if(col==='green')gr++;if(col==='red')re++;if(col==='blue')bl++;});
+  let pu=0,gr=0,re=0,bl=0,ye=0;
+  matches.forEach(([r,c])=>{const col=board[r][c].color;if(col==='purple')pu++;if(col==='green')gr++;if(col==='red')re++;if(col==='blue')bl++;if(col==='yellow')ye++;});
   if(odActive){
     // During OD: panel clears recover gauge (each cleared panel = +4)
     odGauge=Math.min(100,odGauge+matches.length*4+pu*8);
@@ -914,7 +965,10 @@ function processMatches(matches){
     odGauge=Math.min(100,odGauge+matches.length*6+pu*20);
     if(odGauge>=100) activateOverdrive();
   }
-  if(bl>0)addError(-bl*5);if(gr>0)addError(-gr*8);if(re>0)score+=re*50*(odActive?2:1);
+  if(bl>0)addError(-bl*8);   // 青: -8%/枚
+  if(gr>0)addError(-gr*10);  // 緑: -10%/枚
+  if(re>0){addError(-re*5);score+=re*50*(odActive?2:1);}  // 赤: -5%/枚 + スコア
+  if(ye>0)addError(-ye*8);   // 黄: -8%/枚
   updateRank();showScorePopup(gained);
   playSE('se_match');
   if(combo>=2) playSE('se_combo');
@@ -924,9 +978,16 @@ function processMatches(matches){
   const sparkColors={red:'#ff3344',blue:'#0088ff',yellow:'#ffdd00',purple:'#cc44ff',green:'#00ee66'};
   matches.forEach(([r,c])=>{
     const idx=r*COLS+c;
-    cells[idx].classList.add('clearing');
-    const col=board[r][c]?.color;
-    if(sparkColors[col]) spawnSparks(cells[idx], sparkColors[col]);
+    const cellEl=cells[idx];
+    cellEl.classList.add('clearing');
+    if(odActive){
+      // OD中: エメラルド強化エフェクト
+      cellEl.classList.add('od-clearing');
+      spawnODSparks(cellEl);
+    } else {
+      const col=board[r][c]?.color;
+      if(sparkColors[col]) spawnSparks(cellEl, sparkColors[col]);
+    }
   });
 
   if(gameVariant!=='pure'){
@@ -1154,6 +1215,34 @@ document.addEventListener('keydown', (e) => {
 });
 
 // plasma spark burst on panel clear
+
+function spawnODSparks(cellEl) {
+  if (!cellEl) return;
+  const rect = cellEl.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top  + rect.height / 2;
+  const count = 10;
+  // エメラルド系の色をランダムに混ぜる
+  const colors = ['#00e8a0','#00ffcc','#afffdf','#00ff88','#00ffd0'];
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2 + Math.random() * 0.4;
+    const dist  = 32 + Math.random() * 36;
+    const s = document.createElement('div');
+    s.className = 'od-plasma-spark';
+    const col = colors[Math.floor(Math.random()*colors.length)];
+    s.style.cssText = [
+      `left:${cx - 3}px`,
+      `top:${cy - 3}px`,
+      `background:${col}`,
+      `box-shadow:0 0 8px ${col},0 0 16px ${col}`,
+      `--sx:${Math.cos(angle)*dist}px`,
+      `--sy:${Math.sin(angle)*dist}px`,
+      `animation-delay:${Math.random()*0.05}s`,
+    ].join(';');
+    document.body.appendChild(s);
+    s.addEventListener('animationend', () => s.remove(), { once: true });
+  }
+}
 function spawnSparks(cellEl, color) {
   if (!cellEl) return;
   const rect = cellEl.getBoundingClientRect();
