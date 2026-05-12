@@ -12,8 +12,8 @@
   --bg:#020a12; --bg2:#050f1a;
   --neon-cyan:#00f5ff; --neon-pink:#ff0080; --neon-yellow:#ffee00;
   --neon-green:#00ff88; --neon-purple:#aa00ff;
-  --panel-red:#ff3344; --panel-blue:#0088ff; --panel-yellow:#ffdd00;
-  --panel-purple:#cc44ff; --panel-green:#00ee66;
+  --panel-red:#ff2255; --panel-blue:#00ccff; --panel-yellow:#ffdd00;
+  --panel-purple:#dd44ff; --panel-green:#00ff77;
   --text:#c8e8ff; --dim:#3a6080; --overdrive:#ff6600;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -94,11 +94,12 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .panel:hover{transform:scale(1.07);}
 .panel.selected{border-color:#fff!important;box-shadow:0 0 0 2px #fff,0 0 18px #fff,0 0 36px rgba(255,255,255,.5)!important;transform:scale(1.13)!important;z-index:10;animation:selectedpulse .4s infinite alternate;}
 @keyframes selectedpulse{from{box-shadow:0 0 0 2px #fff,0 0 14px #fff,0 0 28px rgba(255,255,255,.4);}to{box-shadow:0 0 0 3px #fff,0 0 24px #fff,0 0 48px rgba(255,255,255,.6);}}
-.panel.p-red{background:rgba(255,51,68,.28);border-color:rgba(255,51,68,.55);box-shadow:inset 0 0 10px rgba(255,51,68,.3);color:var(--panel-red);}
-.panel.p-blue{background:rgba(0,136,255,.28);border-color:rgba(0,136,255,.55);box-shadow:inset 0 0 10px rgba(0,136,255,.3);color:var(--panel-blue);}
-.panel.p-yellow{background:rgba(255,221,0,.22);border-color:rgba(255,221,0,.45);box-shadow:inset 0 0 10px rgba(255,221,0,.25);color:var(--panel-yellow);}
-.panel.p-purple{background:rgba(204,68,255,.28);border-color:rgba(204,68,255,.55);box-shadow:inset 0 0 10px rgba(204,68,255,.3);color:var(--panel-purple);}
-.panel.p-green{background:rgba(0,238,102,.22);border-color:rgba(0,238,102,.45);box-shadow:inset 0 0 10px rgba(0,238,102,.25);color:var(--panel-green);}
+.panel.p-red{background:rgba(255,34,85,.22);border-color:rgba(255,34,85,.7);box-shadow:inset 0 0 14px rgba(255,34,85,.4),0 0 6px rgba(255,34,85,.25);color:var(--panel-red);}
+.panel.p-blue{background:rgba(0,204,255,.18);border-color:rgba(0,204,255,.75);box-shadow:inset 0 0 14px rgba(0,204,255,.4),0 0 6px rgba(0,204,255,.3);color:var(--panel-blue);}
+.panel.p-yellow{background:rgba(255,221,0,.22);border-color:rgba(255,221,0,.45);box-shadow:inset 0 0 10px rgba(255,221,0,.25);color:var(--panel-yellow);} /* unused */
+
+.panel.p-purple{background:rgba(221,68,255,.2);border-color:rgba(221,68,255,.72);box-shadow:inset 0 0 14px rgba(221,68,255,.4),0 0 6px rgba(221,68,255,.25);color:var(--panel-purple);}
+.panel.p-green{background:rgba(0,255,119,.16);border-color:rgba(0,255,119,.7);box-shadow:inset 0 0 14px rgba(0,255,119,.35),0 0 6px rgba(0,255,119,.22);color:var(--panel-green);}
 .panel.p-virus{background:rgba(80,20,20,.7);border-color:#550000;animation:virusblink 1.5s infinite;}
 @keyframes virusblink{50%{border-color:#ff0000;box-shadow:0 0 10px #ff0000;}}
 .panel.p-bomb{background:rgba(255,100,0,.3);border-color:var(--overdrive);animation:bombblink .8s infinite;}
@@ -671,9 +672,9 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 
 <script>
 const COLS=6,ROWS=6,MAX_VIRUS=7,NO_MATCH_LIMIT=10;
-const COLORS=['red','blue','yellow','purple','green'];
-const COLOR_EMOJI={red:'🔴',blue:'🔵',yellow:'🟡',purple:'🟣',green:'💚'};
-const COLOR_CLASS={red:'p-red',blue:'p-blue',yellow:'p-yellow',purple:'p-purple',green:'p-green',virus:'p-virus',bomb:'p-bomb',corrupt:'p-corrupt'};
+const COLORS=['red','blue','purple','green'];
+const COLOR_EMOJI={red:'🔴',blue:'🔵',purple:'🟣',green:'💚'};
+const COLOR_CLASS={red:'p-red',blue:'p-blue',purple:'p-purple',green:'p-green',virus:'p-virus',bomb:'p-bomb',corrupt:'p-corrupt'};
 
 let board=[],selectedCell=null,score=0,combo=0,comboTimer=null;
 let kbCursor=[0,0];   // [row, col] of keyboard cursor
@@ -1010,8 +1011,8 @@ function processMatches(matches){
   combo++;clearComboTimer();
   const gained=Math.floor(matches.length*100*(1+(( odActive?combo*2:combo)-1)*.5)*(odActive?2:1));
   score+=gained;
-  let pu=0,gr=0,re=0,bl=0,ye=0;
-  matches.forEach(([r,c])=>{const col=board[r][c].color;if(col==='purple')pu++;if(col==='green')gr++;if(col==='red')re++;if(col==='blue')bl++;if(col==='yellow')ye++;});
+  let pu=0,gr=0,re=0,bl=0;
+  matches.forEach(([r,c])=>{const col=board[r][c].color;if(col==='purple')pu++;if(col==='green')gr++;if(col==='red')re++;if(col==='blue')bl++;});
   if(odActive){
     // During OD: panel clears recover gauge (each cleared panel = +4)
     odGauge=Math.min(100,odGauge+matches.length*4+pu*8);
@@ -1022,14 +1023,13 @@ function processMatches(matches){
   if(bl>0)addError(-bl*8);   // 青: -8%/枚
   if(gr>0)addError(-gr*10);  // 緑: -10%/枚
   if(re>0){addError(-re*5);score+=re*50*(odActive?2:1);}  // 赤: -5%/枚 + スコア
-  if(ye>0)addError(-ye*8);   // 黄: -8%/枚
   updateRank();showScorePopup(gained);
   playSE('se_match');
   if(combo>=2) playSE('se_combo');
   if(combo>=3) showComboPopup(combo);
 
   const cells=document.getElementById('board').querySelectorAll('.panel');
-  const sparkColors={red:'#ff3344',blue:'#0088ff',yellow:'#ffdd00',purple:'#cc44ff',green:'#00ee66'};
+  const sparkColors={red:'#ff2255',blue:'#00ccff',purple:'#dd44ff',green:'#00ff77'};
   matches.forEach(([r,c])=>{
     const idx=r*COLS+c;
     const cellEl=cells[idx];
