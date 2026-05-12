@@ -224,6 +224,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 #gameover-screen.show{display:flex;animation:gofadein .5s ease;}
 @keyframes gofadein{from{opacity:0;}to{opacity:1;}}
 .go-title{font-family:'Orbitron',sans-serif;font-size:44px;font-weight:900;color:var(--panel-red);text-shadow:0 0 20px var(--panel-red),0 0 60px var(--panel-red);letter-spacing:4px;margin-bottom:24px;text-align:center;width:100%;}
+.go-title.dive-complete{color:var(--neon-cyan);text-shadow:0 0 20px var(--neon-cyan),0 0 60px var(--neon-cyan),0 0 100px rgba(0,245,255,.3);}
 .go-score-label{font-size:11px;color:var(--dim);letter-spacing:3px;margin-bottom:8px;}
 .go-score{font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;color:var(--neon-yellow);text-shadow:0 0 20px var(--neon-yellow);margin-bottom:8px;}
 .go-score.new-record{color:var(--neon-pink);text-shadow:0 0 30px var(--neon-pink),0 0 60px var(--neon-pink);}
@@ -233,7 +234,8 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .go-hs{margin-bottom:24px;text-align:center;}.go-hs-title{font-size:10px;color:var(--dim);letter-spacing:3px;margin-bottom:10px;}
 .go-hs-entry{display:flex;gap:14px;justify-content:center;font-size:13px;margin-bottom:4px;}
 .go-hs-rank{color:var(--neon-yellow);min-width:20px;}.go-hs-val{color:var(--neon-cyan);min-width:90px;font-weight:bold;}.go-hs-mode{color:var(--dim);font-size:11px;}
-.go-btns{display:flex;gap:12px;}
+.go-btns{display:flex;gap:12px;opacity:0;animation:btnfadein .4s ease forwards;animation-delay:1s;}
+@keyframes btnfadein{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
 .go-btn{font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;letter-spacing:3px;padding:12px 28px;background:transparent;border:2px solid var(--neon-cyan);color:var(--neon-cyan);cursor:pointer;transition:all .2s;}
 .go-btn:hover{background:var(--neon-cyan);color:var(--bg);box-shadow:0 0 20px var(--neon-cyan);}
 .go-btn.retry{border-color:var(--neon-green);color:var(--neon-green);}.go-btn.retry:hover{background:var(--neon-green);color:var(--bg);box-shadow:0 0 20px var(--neon-green);}
@@ -602,6 +604,58 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   70% {opacity:.8;}
   100%{opacity:0;transform:translate(var(--sx),var(--sy)) scale(0);}
 }
+
+/* ===== HITSTOP & SHAKE VARIANTS ===== */
+@keyframes shake-sm{
+  0%,100%{transform:none;}
+  25%{transform:translate(-2px,1px);}
+  50%{transform:translate(2px,-1px);}
+  75%{transform:translate(-1px,1px);}
+}
+@keyframes shake-md{
+  0%,100%{transform:none;}
+  20%{transform:translate(-4px,2px) rotate(-.5deg);}
+  40%{transform:translate(4px,-2px) rotate(.5deg);}
+  60%{transform:translate(-3px,1px);}
+  80%{transform:translate(3px,-1px);}
+}
+@keyframes shake-lg{
+  0%,100%{transform:none;}
+  15%{transform:translate(-7px,3px) rotate(-1deg);}
+  30%{transform:translate(7px,-3px) rotate(1deg);}
+  45%{transform:translate(-5px,2px) rotate(-.5deg);}
+  60%{transform:translate(5px,-2px) rotate(.5deg);}
+  80%{transform:translate(-3px,1px);}
+}
+.shake-sm{animation:shake-sm .15s ease;}
+.shake-md{animation:shake-md .2s ease;}
+.shake-lg{animation:shake-lg .28s ease;}
+
+/* hitstop freeze overlay */
+#hitstop-overlay{
+  position:fixed;inset:0;z-index:600;
+  pointer-events:all;
+  background:transparent;
+  display:none;
+}
+#hitstop-overlay.active{display:block;}
+
+/* ===== COUNTDOWN ===== */
+#countdown-popup{
+  position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);
+  font-family:'Orbitron',sans-serif;
+  font-weight:900;
+  color:var(--panel-red);
+  pointer-events:none;z-index:250;
+  opacity:0;
+}
+#countdown-popup.show{animation:countdown-flash .55s forwards;}
+@keyframes countdown-flash{
+  0%  {opacity:0;transform:translate(-50%,-50%) scale(0.5);}
+  20% {opacity:1;transform:translate(-50%,-50%) scale(1.3);}
+  55% {opacity:1;transform:translate(-50%,-50%) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(0.9);}
+}
 </style>
 </head>
 <body>
@@ -649,6 +703,8 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 </div>
 
 <div id="kb-hint">[ ↑↓←→ ] MOVE &nbsp; [ SPACE ] SELECT &nbsp; [ SELECT + ↑↓←→ ] SWAP</div>
+<div id="hitstop-overlay"></div>
+<div id="countdown-popup"></div>
 <div id="od-overlay"></div>
 <div id="danger-overlay"></div>
 <div id="nomatch-overlay"></div>
@@ -707,6 +763,7 @@ function startGame(mode,variant){
   phase=(gameMode===30&&gameVariant==='normal')?3:1;
   selectedCell=null;recordBroken=false;currentRank='NORMAL';
   kbCursor=[0,0];kbMode=false;
+  _lastCountdown=-1;
   prevHighScore=getTop3()[0]?.score||0;
 
   initAudio();  // create AudioContext on user gesture + pre-load SE buffers
@@ -859,6 +916,7 @@ function gameTick(){
   }
 
   if(gameVariant!=='pure'){updatePhase();tickBombs();}
+  checkCountdown();
 }
 
 // ── BOARD INIT ──
@@ -1027,6 +1085,10 @@ function processMatches(matches){
   playSE('se_match');
   if(combo>=2) playSE('se_combo');
   if(combo>=3) showComboPopup(combo);
+  // ヒットストップ + 揺れ（消去枚数ベース）
+  if(matches.length>=6)       hitstop(35,'shake-md');
+  else if(matches.length>=4)  hitstop(20,'shake-sm');
+  else                        hitstop(10,null); // 3枚: 揺れなし
 
   const cells=document.getElementById('board').querySelectorAll('.panel');
   const sparkColors={red:'#ff2255',blue:'#00ccff',purple:'#dd44ff',green:'#00ff77'};
@@ -1069,6 +1131,7 @@ function processMatches(matches){
           const g=500*(odActive?2:1);score+=g;showScorePopup(g);
           board[r][c]=null;
           spawnCorruptExplosion(r,c); // オレンジ爆発エフェクト
+          hitstop(70,'shake-lg');
           // splash: destroy all adjacent panels (including virus/corrupt)
           [[r-1,c],[r+1,c],[r,c-1],[r,c+1]].forEach(([nr,nc])=>{
             if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&board[nr][nc]){
@@ -1088,7 +1151,7 @@ function processMatches(matches){
     renderBoard();updateHUD();
     // chain check: run synchronously on next microtask to avoid setTimeout overhead
     const chain=findMatches();
-    if(chain.length>0){resetNoMatchTimer();processMatches(chain);}
+    if(chain.length>0){resetNoMatchTimer();hitstop(15,'shake-sm');processMatches(chain);}
     else{const comboDelay=2500+gr*1500;comboTimer=setTimeout(()=>{if(combo>0){addError(combo>5?5:2);combo=0;updateHUD();}},comboDelay);updateHUD();}
   },250);
 }
@@ -1143,7 +1206,7 @@ function tickBombs(){
       if(board[r][c].bombTimer<=0){board[r][c]={type:'corrupt',color:'corrupt',corruptHp:3,spawned:true};addError(15);any=true;playSE('se_bomb_explode',SE_VOL,true);}
     }
   }
-  if(any){renderBoard();shakeBoard();}
+  if(any){renderBoard();hitstop(30,'shake-md');}
 }
 
 // ── SKILLS ──
@@ -1153,6 +1216,7 @@ function tickBombs(){
 function activateOverdrive(){
   if(!gameRunning||odGauge<100||odActive)return;
   playSE('se_overdrive');
+  hitstop(70,'shake-lg');
   odGauge=100;odActive=true; // keep at 100, drains in gameTick
   document.getElementById('od-overlay').classList.add('active');
   document.getElementById('od-board-glow').classList.add('active');
@@ -1220,6 +1284,57 @@ function shakeBoard(){const bc=document.getElementById('board-container');bc.cla
 
 
 
+
+// ============================================================
+// HITSTOP & SHAKE
+// ============================================================
+let _hitstopActive = false;
+
+function hitstop(durationMs, shakeClass) {
+  // ゲームループは止めない（描画・音声のみ）
+  // 視覚的なフリーズとしてhitstop-overlayを短時間表示
+  if (_hitstopActive) return;
+  _hitstopActive = true;
+  const ov = document.getElementById('hitstop-overlay');
+  ov.classList.add('active');
+  setTimeout(() => {
+    ov.classList.remove('active');
+    _hitstopActive = false;
+  }, durationMs);
+
+  // 画面揺れ
+  if (shakeClass) {
+    const bc = document.getElementById('board-container');
+    bc.classList.remove('shake-sm','shake-md','shake-lg');
+    void bc.offsetWidth;
+    bc.classList.add(shakeClass);
+    bc.addEventListener('animationend', () => {
+      bc.classList.remove('shake-sm','shake-md','shake-lg');
+    }, {once:true});
+  }
+}
+
+// ============================================================
+// COUNTDOWN (ラスト5秒)
+// ============================================================
+let _lastCountdown = -1;
+
+function checkCountdown() {
+  if(timeLeft===Infinity) return;
+  if(timeLeft<=5 && timeLeft>0 && timeLeft !== _lastCountdown) {
+    _lastCountdown = timeLeft;
+    const el = document.getElementById('countdown-popup');
+    // フォントサイズ: 5秒は小→1秒は大
+    const sizes = {5:'60px',4:'68px',3:'78px',2:'90px',1:'110px'};
+    el.style.fontSize = sizes[timeLeft] || '70px';
+    el.textContent = timeLeft;
+    el.classList.remove('show');
+    void el.offsetWidth;
+    el.classList.add('show');
+    // 1秒のとき特別に揺れ大
+    if(timeLeft===1) hitstop(40, 'shake-md');
+  }
+}
 // ============================================================
 // TOUCH / FLICK CONTROL (スマホ専用)
 // ============================================================
@@ -1446,8 +1561,23 @@ function endGame(){
   const isNew=recordBroken||(score>0&&score>=(getTop3()[0]?.score||0));
   const sr=getScoreRank(score);
   const rd=document.getElementById('go-rank-disp');rd.textContent=sr.rank;rd.className='go-rank '+sr.cls;
-  document.getElementById('go-title-text').textContent='SYSTEM LIMIT REACHED';
+  // SPEED RUN(30秒) と STANDARD(90秒・normal) は時間切れ = クリア扱い
+  const isClear = timeLeft <= 0 &&
+    gameVariant === 'normal' &&
+    (gameMode === 30 || gameMode === 90);
+  const currentTitle = document.getElementById('go-title-text').textContent;
+  const isFreezeOrOther = currentTitle === 'TIME FREEZE';
+  const titleEl = document.getElementById('go-title-text');
+  if(!isFreezeOrOther){
+    const titleText = isClear ? 'DIVE COMPLETE' : 'SYSTEM LIMIT REACHED';
+    titleEl.textContent = titleText;
+    titleEl.classList.toggle('dive-complete', isClear);
+  }
   document.getElementById('gameover-screen').classList.add('show');
+  // ボタンのアニメーションを毎回リセット（1秒遅延フェードイン）
+  const btns = document.querySelector('.go-btns');
+  btns.style.animation='none'; void btns.offsetWidth;
+  btns.style.animation='';
   const gs=document.getElementById('go-score');gs.textContent=score.toLocaleString();gs.classList.toggle('new-record',isNew);
   document.getElementById('go-nr-badge').classList.toggle('show',isNew);
   document.getElementById('go-hs-list').innerHTML=getTop3().map((e,i)=>
@@ -1455,8 +1585,8 @@ function endGame(){
   ).join('');
 }
 
-function restartGame(){document.getElementById('gameover-screen').classList.remove('show');startGame(gameMode,gameVariant);}
-function goToTitle(){document.getElementById('gameover-screen').classList.remove('show');document.getElementById('game-wrapper').style.display='none';document.getElementById('title-screen').style.display='flex';renderTitleHS();}
+function restartGame(){document.getElementById('gameover-screen').classList.remove('show');document.getElementById('go-title-text').classList.remove('dive-complete');startGame(gameMode,gameVariant);}
+function goToTitle(){document.getElementById('gameover-screen').classList.remove('show');document.getElementById('go-title-text').classList.remove('dive-complete');document.getElementById('game-wrapper').style.display='none';document.getElementById('title-screen').style.display='flex';renderTitleHS();}
 
 // ============================================================
 // AUDIO ENGINE — AudioContext + pre-decoded buffers
