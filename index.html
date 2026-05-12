@@ -656,6 +656,113 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   55% {opacity:1;transform:translate(-50%,-50%) scale(1);}
   100%{opacity:0;transform:translate(-50%,-50%) scale(0.9);}
 }
+
+/* ===== A: COMBO BOARD GLOW ===== */
+/* コンボに応じて盤面全体が染まる */
+#board.combo-boost     { box-shadow: inset 0 0 30px rgba(0,204,255,.12); }
+#board.combo-overclock { box-shadow: inset 0 0 40px rgba(255,238,0,.14); animation: overclock-pulse .6s infinite alternate; }
+#board.combo-rank-od   { box-shadow: inset 0 0 50px rgba(255,102,0,.16); animation: od-rank-pulse .4s infinite alternate; }
+#board.combo-godlike   { box-shadow: inset 0 0 60px rgba(255,0,128,.2);  animation: godlike-pulse .25s infinite alternate; }
+@keyframes overclock-pulse {
+  from { box-shadow: inset 0 0 30px rgba(255,238,0,.10), 0 0 8px rgba(255,238,0,.15); }
+  to   { box-shadow: inset 0 0 55px rgba(255,238,0,.22), 0 0 20px rgba(255,238,0,.3); }
+}
+@keyframes od-rank-pulse {
+  from { box-shadow: inset 0 0 40px rgba(255,102,0,.13), 0 0 12px rgba(255,102,0,.2); }
+  to   { box-shadow: inset 0 0 65px rgba(255,102,0,.25), 0 0 28px rgba(255,102,0,.4); }
+}
+@keyframes godlike-pulse {
+  from { box-shadow: inset 0 0 50px rgba(255,0,128,.18), 0 0 18px rgba(255,0,128,.3); }
+  to   { box-shadow: inset 0 0 80px rgba(255,0,128,.32), 0 0 40px rgba(255,0,128,.5); }
+}
+
+/* パネルボーダー脈動（高コンボ中） */
+#board.combo-overclock .panel.p-red,
+#board.combo-overclock .panel.p-blue,
+#board.combo-overclock .panel.p-purple,
+#board.combo-overclock .panel.p-green {
+  animation: panel-border-pulse-oc .5s infinite alternate;
+}
+@keyframes panel-border-pulse-oc {
+  from { border-color: rgba(255,238,0,.35); }
+  to   { border-color: rgba(255,238,0,.75); box-shadow: inset 0 0 8px rgba(255,238,0,.2); }
+}
+#board.combo-rank-od .panel.p-red,
+#board.combo-rank-od .panel.p-blue,
+#board.combo-rank-od .panel.p-purple,
+#board.combo-rank-od .panel.p-green {
+  animation: panel-border-pulse-od .35s infinite alternate;
+}
+@keyframes panel-border-pulse-od {
+  from { border-color: rgba(255,102,0,.4); }
+  to   { border-color: rgba(255,160,0,.85); box-shadow: inset 0 0 10px rgba(255,102,0,.25); }
+}
+#board.combo-godlike .panel.p-red,
+#board.combo-godlike .panel.p-blue,
+#board.combo-godlike .panel.p-purple,
+#board.combo-godlike .panel.p-green {
+  animation: panel-border-pulse-gl .2s infinite alternate;
+}
+@keyframes panel-border-pulse-gl {
+  from { border-color: rgba(255,0,128,.5); }
+  to   { border-color: rgba(255,80,180,.95); box-shadow: inset 0 0 12px rgba(255,0,128,.3), 0 0 6px rgba(255,0,128,.4); }
+}
+
+/* ===== B: MATCH LINE FLASH ===== */
+.match-line{
+  position:fixed;
+  pointer-events:none;
+  z-index:280;
+  border-radius:3px;
+  transform-origin:left center;
+  animation:line-flash .28s ease-out forwards;
+}
+@keyframes line-flash{
+  0%  { opacity:1;  transform:scaleX(1)   scaleY(1);   filter:brightness(2); }
+  40% { opacity:.9; transform:scaleX(1.02) scaleY(1.4); filter:brightness(3); }
+  100%{ opacity:0;  transform:scaleX(1.05) scaleY(0);   filter:brightness(1); }
+}
+.match-line.vertical{
+  transform-origin:center top;
+  animation:line-flash-v .28s ease-out forwards;
+}
+@keyframes line-flash-v{
+  0%  { opacity:1;  transform:scaleY(1)   scaleX(1.4); filter:brightness(2); }
+  40% { opacity:.9; transform:scaleY(1.02) scaleX(1.8); filter:brightness(3); }
+  100%{ opacity:0;  transform:scaleY(1.05) scaleX(0);   filter:brightness(1); }
+}
+
+/* ===== E: PHASE GLITCH ===== */
+#phase-glitch-overlay{
+  position:fixed;inset:0;z-index:490;
+  pointer-events:none;
+  opacity:0;
+  display:none;
+}
+#phase-glitch-overlay.show{
+  display:block;
+  animation:phase-glitch-seq .9s forwards;
+}
+@keyframes phase-glitch-seq{
+  0%   { opacity:0; }
+  5%   { opacity:1; background: repeating-linear-gradient(0deg,rgba(0,245,255,.06) 0px,transparent 2px,transparent 4px); transform:none; }
+  10%  { transform:translate(-6px,0) skewX(-3deg); filter:hue-rotate(40deg); }
+  15%  { transform:translate(6px,0)  skewX(3deg);  opacity:.8; }
+  20%  { transform:translate(-4px,2px); filter:hue-rotate(-20deg); }
+  28%  { transform:none; opacity:1; }
+  35%  { opacity:0; transform:translate(3px,0) skewX(-1deg); }
+  42%  { opacity:1; transform:none; filter:hue-rotate(20deg); }
+  50%  { opacity:0; }
+  58%  { opacity:.7; transform:translate(-2px,0); filter:brightness(1.5); }
+  70%  { opacity:0; transform:none; }
+  100% { opacity:0; display:none; }
+}
+/* グリッチラインバー */
+.phase-glitch-bar{
+  position:absolute;left:0;right:0;
+  background:rgba(0,245,255,.15);
+  pointer-events:none;
+}
 </style>
 </head>
 <body>
@@ -704,6 +811,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 
 <div id="kb-hint">[ ↑↓←→ ] MOVE &nbsp; [ SPACE ] SELECT &nbsp; [ SELECT + ↑↓←→ ] SWAP</div>
 <div id="hitstop-overlay"></div>
+<div id="phase-glitch-overlay"></div>
 <div id="countdown-popup"></div>
 <div id="od-overlay"></div>
 <div id="danger-overlay"></div>
@@ -764,6 +872,7 @@ function startGame(mode,variant){
   selectedCell=null;recordBroken=false;currentRank='NORMAL';
   kbCursor=[0,0];kbMode=false;
   _lastCountdown=-1;
+  updateBoardComboGlow&&updateBoardComboGlow();
   prevHighScore=getTop3()[0]?.score||0;
 
   initAudio();  // create AudioContext on user gesture + pre-load SE buffers
@@ -1092,6 +1201,13 @@ function processMatches(matches){
 
   const cells=document.getElementById('board').querySelectorAll('.panel');
   const sparkColors={red:'#ff2255',blue:'#00ccff',purple:'#dd44ff',green:'#00ff77'};
+
+  // B: 消去ライン光跡
+  const colorCounts={red:re,blue:bl,purple:pu,green:gr};
+  const dominantColor=Object.entries(colorCounts).sort((a,b)=>b[1]-a[1])[0][0];
+  const lineColor = odActive ? '#00e8a0' : (sparkColors[dominantColor]||'#ffffff');
+  spawnMatchLines(matches, lineColor);
+
   matches.forEach(([r,c])=>{
     const idx=r*COLS+c;
     const cellEl=cells[idx];
@@ -1152,7 +1268,7 @@ function processMatches(matches){
     // chain check: run synchronously on next microtask to avoid setTimeout overhead
     const chain=findMatches();
     if(chain.length>0){resetNoMatchTimer();hitstop(15,'shake-sm');processMatches(chain);}
-    else{const comboDelay=2500+gr*1500;comboTimer=setTimeout(()=>{if(combo>0){addError(combo>5?5:2);combo=0;updateHUD();}},comboDelay);updateHUD();}
+    else{const comboDelay=2500+gr*1500;comboTimer=setTimeout(()=>{if(combo>0){addError(combo>5?5:2);combo=0;currentRank='NORMAL';updateHUD();updateBoardComboGlow();}},comboDelay);updateHUD();}
   },250);
 }
 
@@ -1232,7 +1348,7 @@ function updateRank(){
   else if(combo>=6)currentRank='OVERCLOCK';
   else if(combo>=3)currentRank='BOOST';
   else currentRank='NORMAL';
-  if(currentRank!==prev)updateHUD();
+  if(currentRank!==prev){updateHUD();updateBoardComboGlow();}
 }
 
 function updatePhase(){
@@ -1256,7 +1372,7 @@ function addBombAndVirus(){
   renderBoard();
 }
 
-function announcePhase(){const el=document.getElementById('phase-announce');el.textContent='PHASE '+phase;el.classList.remove('show');void el.offsetWidth;el.classList.add('show');}
+function announcePhase(){const el=document.getElementById('phase-announce');el.textContent='PHASE '+phase;el.classList.remove('show');void el.offsetWidth;el.classList.add('show');triggerPhaseGlitch();}
 
 // ── ERROR ──
 function addError(amount){
@@ -1280,6 +1396,97 @@ function getScoreRank(s){
 function showComboPopup(n){const el=document.getElementById('combo-popup');el.textContent=n+'x COMBO!';el.classList.remove('show');void el.offsetWidth;el.classList.add('show');}
 function showScorePopup(val){const p=document.createElement('div');p.className='score-popup';p.textContent='+'+val.toLocaleString();p.style.left=(30+Math.random()*40)+'%';p.style.top=(40+Math.random()*20)+'%';document.body.appendChild(p);setTimeout(()=>p.remove(),1000);}
 function showNewRecord(){const el=document.getElementById('new-record-flash');el.classList.remove('show');void el.offsetWidth;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2000);}
+
+// ── コンボ盤面グロー更新
+function updateBoardComboGlow() {
+  const board = document.getElementById('board');
+  board.classList.remove('combo-boost','combo-overclock','combo-rank-od','combo-godlike');
+  if (currentRank === 'GODLIKE')   board.classList.add('combo-godlike');
+  else if (currentRank === 'OVERDRIVE') board.classList.add('combo-rank-od');
+  else if (currentRank === 'OVERCLOCK') board.classList.add('combo-overclock');
+  else if (currentRank === 'BOOST')     board.classList.add('combo-boost');
+}
+
+// ── B: 消去ライン光跡
+function spawnMatchLines(matches, colorHex) {
+  if (!matches || matches.length < 2) return;
+  const boardEl = document.getElementById('board');
+  const cells = boardEl.querySelectorAll('.panel');
+
+  // 水平ライン検出
+  const rowGroups = {};
+  matches.forEach(([r,c]) => { if (!rowGroups[r]) rowGroups[r] = []; rowGroups[r].push(c); });
+  Object.entries(rowGroups).forEach(([r, cols]) => {
+    if (cols.length < 2) return;
+    cols.sort((a,b)=>a-b);
+    const first = cells[+r*COLS+cols[0]];
+    const last  = cells[+r*COLS+cols[cols.length-1]];
+    if (!first || !last) return;
+    const r1 = first.getBoundingClientRect();
+    const r2 = last.getBoundingClientRect();
+    const line = document.createElement('div');
+    line.className = 'match-line';
+    const h = r1.height * 0.55;
+    line.style.cssText = [
+      `left:${r1.left}px`,
+      `top:${r1.top + r1.height/2 - h/2}px`,
+      `width:${r2.right - r1.left}px`,
+      `height:${h}px`,
+      `background:linear-gradient(90deg, transparent, ${colorHex}cc, #fff, ${colorHex}cc, transparent)`,
+      `box-shadow: 0 0 10px ${colorHex}, 0 0 24px ${colorHex}88`,
+    ].join(';');
+    document.body.appendChild(line);
+    line.addEventListener('animationend', ()=>line.remove(), {once:true});
+  });
+
+  // 垂直ライン検出
+  const colGroups = {};
+  matches.forEach(([r,c]) => { if (!colGroups[c]) colGroups[c] = []; colGroups[c].push(r); });
+  Object.entries(colGroups).forEach(([c, rows]) => {
+    if (rows.length < 2) return;
+    rows.sort((a,b)=>a-b);
+    const first = cells[rows[0]*COLS + +c];
+    const last  = cells[rows[rows.length-1]*COLS + +c];
+    if (!first || !last) return;
+    const r1 = first.getBoundingClientRect();
+    const r2 = last.getBoundingClientRect();
+    const line = document.createElement('div');
+    line.className = 'match-line vertical';
+    const w = r1.width * 0.55;
+    line.style.cssText = [
+      `left:${r1.left + r1.width/2 - w/2}px`,
+      `top:${r1.top}px`,
+      `width:${w}px`,
+      `height:${r2.bottom - r1.top}px`,
+      `background:linear-gradient(180deg, transparent, ${colorHex}cc, #fff, ${colorHex}cc, transparent)`,
+      `box-shadow: 0 0 10px ${colorHex}, 0 0 24px ${colorHex}88`,
+    ].join(';');
+    document.body.appendChild(line);
+    line.addEventListener('animationend', ()=>line.remove(), {once:true});
+  });
+}
+
+// ── E: フェーズグリッチ演出
+function triggerPhaseGlitch() {
+  const ov = document.getElementById('phase-glitch-overlay');
+  // ランダムなグリッチラインバーを生成
+  ov.innerHTML = '';
+  const lineCount = 5 + Math.floor(Math.random()*5);
+  for (let i = 0; i < lineCount; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'phase-glitch-bar';
+    bar.style.cssText = [
+      `top:${Math.random()*100}%`,
+      `height:${1 + Math.random()*3}px`,
+      `opacity:${0.3 + Math.random()*0.5}`,
+    ].join(';');
+    ov.appendChild(bar);
+  }
+  ov.classList.remove('show');
+  void ov.offsetWidth;
+  ov.classList.add('show');
+  ov.addEventListener('animationend', ()=>{ ov.classList.remove('show'); ov.innerHTML=''; }, {once:true});
+}
 function shakeBoard(){const bc=document.getElementById('board-container');bc.classList.remove('shaking');void bc.offsetWidth;bc.classList.add('shaking');}
 
 
