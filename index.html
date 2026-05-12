@@ -1267,7 +1267,7 @@ function processMatches(matches){
     renderBoard();updateHUD();
     // chain check: run synchronously on next microtask to avoid setTimeout overhead
     const chain=findMatches();
-    if(chain.length>0){resetNoMatchTimer();hitstop(15,'shake-sm');processMatches(chain);}
+    if(chain.length>0){resetNoMatchTimer();hitstop(15,'shake-sm');playSE('se_rensa');processMatches(chain);}
     else{const comboDelay=2500+gr*1500;comboTimer=setTimeout(()=>{if(combo>0){addError(combo>5?5:2);combo=0;currentRank='NORMAL';updateHUD();updateBoardComboGlow();}},comboDelay);updateHUD();}
   },250);
 }
@@ -1813,6 +1813,7 @@ const SE_FILES = {
   se_initialize:   'se_initialize.mp3',
   se_match:        'se_match.mp3',
   se_combo:        'se_combo.mp3',
+  se_rensa:        'se_rensa.mp3',
   se_overdrive:    'se_overdrive.mp3',
   se_virus:        'se_virus.mp3',
   se_virus_hit:    'se_virus_hit.mp3',
