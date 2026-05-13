@@ -1321,7 +1321,6 @@ function gameTick(){
     odGauge=Math.max(0,odGauge-16.67);
     if(odGauge<=0){
       odActive=false;
-      if(_bgmSource&&!_isLastSpurt)try{_bgmSource.playbackRate.setValueAtTime(1.0,_actx.currentTime);}catch(e){}
       document.getElementById('od-overlay').classList.remove('active');
       document.getElementById('od-board-glow').classList.remove('active');
       document.getElementById('score-disp').classList.remove('od-active');
@@ -1647,8 +1646,6 @@ function activateOverdrive(){
   playSE('se_overdrive');
   hitstop(70,'shake-lg');
   odGauge=100;odActive=true;
-  // OD中はBGM playbackRate 1.05で微加速
-  if(_bgmSource&&!_isLastSpurt)try{_bgmSource.playbackRate.setValueAtTime(1.05,_actx.currentTime);}catch(e){}
   document.getElementById('od-overlay').classList.add('active');
   document.getElementById('od-board-glow').classList.add('active');
   const ann=document.getElementById('od-announce');ann.classList.remove('show');void ann.offsetWidth;ann.classList.add('show');
@@ -1914,7 +1911,9 @@ function onTouchEnd(e,r,c){
   const FLICK_THRESH=12; // px — フリック判定閾値
 
   if(absDx<FLICK_THRESH&&absDy<FLICK_THRESH){
-    // タップ: 通常選択（click イベントに任せる）
+    // タップ: onCellClickを直接呼ぶ（preventDefault後はclickが来ないため）
+    _touchHandled=true;
+    onCellClick(r,c);
     return;
   }
 
