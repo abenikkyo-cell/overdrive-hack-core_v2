@@ -173,6 +173,7 @@ body.last-spurt::before{
   pointer-events:none;
   z-index:1;
   mix-blend-mode:normal;
+  opacity:0.78;
 }
 /* 絵文字を非表示 */
 .panel.has-img{
@@ -476,6 +477,36 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 /* corrupt spawn: white flash */
 .panel.p-corrupt.gimmick-spawn{filter:brightness(6);box-shadow:0 0 20px #aaaaaa,0 0 40px #ffffff;}
 .corrupt-hp{font-size:9px;color:#ff4444;font-weight:bold;letter-spacing:-1px;}
+
+/* 耐久値バッジ（virus/corrupt 共通） */
+.durability-badge{
+  position:absolute;
+  bottom:3px;
+  left:50%;
+  transform:translateX(-50%);
+  font-family:'Orbitron',sans-serif;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:1px;
+  padding:1px 5px;
+  border-radius:3px;
+  pointer-events:none;
+  z-index:10;
+  white-space:nowrap;
+  line-height:1.4;
+}
+.durability-badge.virus-hp{
+  color:#00ffcc;
+  background:rgba(0,0,0,.65);
+  border:1px solid rgba(0,255,200,.5);
+  text-shadow:0 0 6px #00ffcc;
+}
+.durability-badge.corrupt-dur{
+  color:#ff4444;
+  background:rgba(0,0,0,.65);
+  border:1px solid rgba(255,50,50,.5);
+  text-shadow:0 0 6px #ff4444;
+}
 .panel.clearing{
   animation:plasma-core .25s forwards;
   z-index:20;
@@ -1584,7 +1615,11 @@ function renderBoard(){
         div.textContent='';
         div.classList.add('has-img');
         const im=document.createElement('img');im.className='panel-img';im.src=PANEL_IMAGES.virus;im.draggable=false;div.appendChild(im);
-        const vh=document.createElement('div');vh.className='bomb-timer';vh.textContent=(cell.virusHits||0)+'/2';div.appendChild(vh);
+        const vh=document.createElement('div');
+        vh.className='durability-badge virus-hp';
+        const vRemain=2-(cell.virusHits||0);
+        vh.textContent='HIT×'+vRemain;
+        div.appendChild(vh);
       }else if(cell.type==='bomb'){
         div.textContent='';
         div.classList.add('has-img');
@@ -1594,7 +1629,11 @@ function renderBoard(){
         div.textContent='';
         div.classList.add('has-img');
         const im=document.createElement('img');im.className='panel-img';im.src=PANEL_IMAGES.corrupt;im.draggable=false;div.appendChild(im);
-        const hp=document.createElement('div');hp.className='bomb-timer corrupt-hp';hp.textContent='♦'.repeat(cell.corruptHp??3);div.appendChild(hp);
+        const hp=document.createElement('div');
+        hp.className='durability-badge corrupt-dur';
+        const cHp=cell.corruptHp??3;
+        hp.textContent='HP '+'♦'.repeat(cHp)+'◇'.repeat(3-cHp);
+        div.appendChild(hp);
       }
       if(selectedCell&&selectedCell[0]===r&&selectedCell[1]===c)div.classList.add('selected');
       if(kbMode&&kbCursor[0]===r&&kbCursor[1]===c)div.classList.add('kb-cursor');
