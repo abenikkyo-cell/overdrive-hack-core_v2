@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hackcore-v2';
+const CACHE_NAME = 'hackcore-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -15,9 +15,17 @@ const ASSETS = [
   './se_virus_hit.mp3',
   './se_bomb_explode.mp3',
   './se_gameover.mp3',
+  './panel_red.png',
+  './panel_blue.png',
+  './panel_purple.png',
+  './panel_green.png',
+  './panel_virus.png',
+  './panel_bomb.png',
+  './panel_corrupt.png',
+  './icon-192.png',
+  './icon-512.png',
 ];
 
-// インストール時に全アセットをキャッシュ
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
@@ -25,7 +33,6 @@ self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
 
-// 古いキャッシュを削除
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) =>
@@ -35,7 +42,6 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
-// キャッシュ優先で応答（オフライン対応）
 self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(e.request).then((cached) => cached || fetch(e.request))
