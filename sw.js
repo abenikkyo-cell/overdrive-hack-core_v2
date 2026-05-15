@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hackcore-v1';
+const CACHE_NAME = 'hackcore-v2';
 const ASSETS = [
   './',
   './index.html',
